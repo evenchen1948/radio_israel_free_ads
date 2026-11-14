@@ -1,0 +1,26 @@
+[
+  {
+    "id": "kan-88",
+    "name": "כאן 88",
+    "category": "music",
+    "streamUrl": "https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/radio/kan_88/live.livx/playlist.m3u8?renditions&fmp4",
+    "streamType": "hls",
+    "logo": "/logos/kan-88.svg"
+  },
+  {
+    "id": "galei-tzahal",
+    "name": "גלי צה\"ל",
+    "category": "news",
+    "streamUrl": "https://glzwizzlv.bynetcdn.com/glz_mp3",
+    "streamType": "mp3",
+    "logo": "/logos/galei-tzahal.svg"
+  },
+  {
+    "id": "galgalatz",
+    "name": "גלגלצ",
+    "category": "music",
+    "streamUrl": "https://glzwizzlv.bynetcdn.com/glglz_mp3",
+    "streamType": "mp3",
+    "logo": "/logos/galgalatz.svg"
+  }
+]
