@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# Builds the debug app, installs it on the connected device or running emulator, and launches it.
+# Usage (Git Bash, from anywhere):  scripts/run
+set -euo pipefail
+
+APP_ID="com.israeliradio.app"
+MAIN_ACTIVITY=".MainActivity"
+MIN_JAVA=17
+
+cd "$(dirname "$0")/.."
+
+# Prints the major version of the java binary under the given JDK home, or 0 if there is none.
+java_major() {
+  local java="$1/bin/java"
+  [ -x "$java" ] || [ -x "$java.exe" ] || { echo 0; return; }
+  "$java" -version 2>&1 | sed -n 's/.*version "\([0-9]*\).*/\1/p' | head -1
+}
+
+# The Android Gradle plugin needs JDK 17+. If JAVA_HOME is older or unset, use the
+# oldest suitable JDK that IntelliJ or Android Studio downloaded into ~/.jdks.
+if [ "$(java_major "${JAVA_HOME:-}")" -lt "$MIN_JAVA" ]; then
+  best_home=""
+  best_major=0
+  for home in "$HOME"/.jdks/*/; do
+    home="${home%/}"
+    major="$(java_major "$home")"
+    if [ "${major:-0}" -ge "$MIN_JAVA" ] && { [ "$best_major" -eq 0 ] || [ "$major" -lt "$best_major" ]; }; then
+      best_home="$home"
+      best_major="$major"
+    fi
+  done
+  if [ -z "$best_home" ]; then
+    echo "error: no JDK $MIN_JAVA or newer found. Set JAVA_HOME to one." >&2
+    exit 1
+  fi
+  export JAVA_HOME="$best_home"
+fi
+echo "Using JDK: $JAVA_HOME"
+
+# Locate adb: local.properties first, then the usual environment variables and default path.
+sdk_dir=""
+if [ -f local.properties ]; then
+  sdk_dir="$(sed -n 's/^sdk\.dir=//p' local.properties | head -1 | sed 's/\\:/:/g; s/\\\\/\//g' | tr -d '\r')"
+fi
+for candidate in "$sdk_dir" "${ANDROID_HOME:-}" "${ANDROID_SDK_ROOT:-}" "${LOCALAPPDATA:-}/Android/Sdk" "$HOME/Android/Sdk"; do
+  if [ -n "$candidate" ] && { [ -x "$candidate/platform-tools/adb" ] || [ -x "$candidate/platform-tools/adb.exe" ]; }; then
+    ADB="$candidate/platform-tools/adb"
+    break
+  fi
+done
+if [ -z "${ADB:-}" ]; then
+  echo "error: adb not found. Set sdk.dir in local.properties or ANDROID_HOME." >&2
+  exit 1
+fi
+
+if ! "$ADB" devices | tr -d '\r' | grep -q "device$"; then
+  echo "error: no device or emulator is connected. Start an emulator or plug in a phone, then run again." >&2
+  exit 1
+fi
+
+./gradlew installDebug
+
+# Keep Git Bash from rewriting the component name as a Windows path.
+MSYS_NO_PATHCONV=1 "$ADB" shell am start -n "$APP_ID/$MAIN_ACTIVITY"
+echo "Launched $APP_ID"

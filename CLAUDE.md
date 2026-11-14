@@ -14,6 +14,7 @@ Native Android app in Kotlin + Jetpack Compose. Requirements are in SPEC.md. Rea
 
 ## Commands
 
+- `scripts/run` — build, install and launch the app on the connected device or running emulator (Git Bash; finds JDK 17+ and adb itself)
 - `./gradlew assembleDebug` — build a debug APK
 - `./gradlew installDebug` — install on a connected device or emulator
 - `./gradlew test` — run unit tests
