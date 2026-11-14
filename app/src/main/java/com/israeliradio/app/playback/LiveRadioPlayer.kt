@@ -1,8 +1,9 @@
 package com.israeliradio.app.playback
 
 import androidx.annotation.OptIn
-import androidx.media3.common.MediaItem
 import androidx.media3.common.ForwardingPlayer
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 
@@ -25,6 +26,15 @@ class LiveRadioPlayer(player: Player) : ForwardingPlayer(player) {
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 behindLive = false
+            }
+
+            override fun onPlayerError(error: PlaybackException) {
+                // An HLS stream that was paused or stalled long enough falls out of the
+                // broadcaster's live window. That is not a real failure: rejoin at the live edge.
+                if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
+                    player.seekToDefaultPosition()
+                    player.prepare()
+                }
             }
         })
     }

@@ -1,21 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">רדיו ישראלי</string>
-    <string name="no_station_selected">לא נבחרה תחנה</string>
-    <string name="status_idle">בחרו תחנה</string>
+
+    <string name="greeting_morning">בוקר טוב</string>
+    <string name="greeting_afternoon">צהריים טובים</string>
+    <string name="greeting_evening">ערב טוב</string>
+    <string name="greeting_night">לילה טוב</string>
+
+    <string name="filter_all">הכול</string>
+    <string name="category_news">חדשות</string>
+    <string name="category_music">מוזיקה</string>
+    <string name="category_talk">דיבור</string>
+    <string name="category_regional">אזורי</string>
+    <string name="category_religious">דת</string>
+    <string name="action_show_all">הצג הכול</string>
+
+    <!-- Card subtitle for the current station: category, then playback status. -->
+    <string name="card_subtitle_current">%1$s • %2$s</string>
+
+    <string name="status_live">שידור חי</string>
     <string name="status_loading">מתחבר…</string>
-    <string name="status_playing">מתנגן עכשיו</string>
+    <string name="status_playing">מנגן עכשיו</string>
     <string name="status_paused">מושהה</string>
     <string name="status_error">לא הצלחנו להתחבר לתחנה</string>
+    <string name="status_error_short">שגיאה</string>
+
     <string name="action_play">נגן</string>
     <string name="action_pause">השהה</string>
     <string name="action_retry">נסו שוב</string>
-    <string name="action_previous_station">התחנה הקודמת</string>
-    <string name="action_next_station">התחנה הבאה</string>
-    <string name="tuner_label">בורר תחנות</string>
-    <string name="category_news">חדשות ואקטואליה</string>
-    <string name="category_music">מוזיקה</string>
-    <string name="category_talk">תרבות ושיחה</string>
-    <string name="category_regional">אזורי</string>
-    <string name="category_religious">דת ומסורת</string>
 </resources>
