@@ -1,17 +1,18 @@
 package com.israeliradio.app.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -19,15 +20,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -42,7 +41,10 @@ import com.israeliradio.app.player.PlaybackStatus
 import com.israeliradio.app.player.PlayerViewModel
 import com.israeliradio.app.ui.theme.RadioColors
 
-/** Home screen: the retro radio on top, now-playing text and station presets below. */
+/** Screens shorter than this scroll the controls together with the station list. */
+private val PinnedControlsMinHeight = 600.dp
+
+/** Home screen: the tuner-style player on top and the station list below. */
 @Composable
 fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -51,69 +53,80 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
     val isActive = state.status == PlaybackStatus.PLAYING || state.status == PlaybackStatus.LOADING
     val currentName = state.current?.name ?: stringResource(R.string.no_station_selected)
 
-    fun playNext() {
+    fun playOffset(offset: Int) {
         if (stations.isEmpty()) return
-        viewModel.play(stations[((selectedIndex ?: -1) + 1) % stations.size])
+        // With nothing tuned yet, "next" starts at the first station and "previous" at the last.
+        val from = selectedIndex ?: if (offset > 0) -1 else 0
+        viewModel.play(stations[(from + offset).mod(stations.size)])
     }
 
-    Column(
+    val controls: @Composable () -> Unit = {
+        Column {
+            PlayerDisplay(
+                stationName = currentName,
+                statusLabel = stringResource(state.status.labelRes()),
+                statusColor = when (state.status) {
+                    PlaybackStatus.PLAYING -> RadioColors.Lime
+                    PlaybackStatus.ERROR -> RadioColors.Indicator
+                    else -> RadioColors.DisplayMuted
+                },
+                retryLabel = if (state.status == PlaybackStatus.ERROR) stringResource(R.string.action_retry) else null,
+                onRetry = viewModel::togglePlayPause,
+            )
+            TunerScale(
+                stationCount = stations.size,
+                selectedIndex = selectedIndex,
+                tunerLabel = stringResource(R.string.tuner_label),
+                tunerState = currentName,
+                nextStationLabel = stringResource(R.string.action_next_station),
+                onSelectIndex = { index -> stations.getOrNull(index)?.let(viewModel::play) },
+                onNextStation = { playOffset(1) },
+            )
+            TransportControls(
+                isActive = isActive,
+                playPauseLabel = stringResource(if (isActive) R.string.action_pause else R.string.action_play),
+                previousLabel = stringResource(R.string.action_previous_station),
+                nextLabel = stringResource(R.string.action_next_station),
+                onTogglePlayPause = {
+                    // With nothing tuned yet, play starts the first station.
+                    if (state.current == null) playOffset(1) else viewModel.togglePlayPause()
+                },
+                onPrevious = { playOffset(-1) },
+                onNext = { playOffset(1) },
+            )
+        }
+    }
+    val stationList: @Composable (Modifier) -> Unit = { modifier ->
+        Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+            StationPresets(
+                stations = stations,
+                current = state.current,
+                onSelect = viewModel::play,
+                modifier = Modifier
+                    .widthIn(max = 520.dp)
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(start = 16.dp, end = 16.dp, bottom = 24.dp),
+            )
+        }
+    }
+
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .safeDrawingPadding()
-            .padding(horizontal = 16.dp, vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .background(RadioColors.Surface),
     ) {
-        RetroRadio(
-            stationCount = stations.size,
-            selectedIndex = selectedIndex,
-            isActive = isActive,
-            isLoading = state.status == PlaybackStatus.LOADING,
-            playPauseLabel = stringResource(if (isActive) R.string.action_pause else R.string.action_play),
-            nextStationLabel = stringResource(R.string.action_next_station),
-            tunerLabel = stringResource(R.string.tuner_label),
-            tunerState = currentName,
-            onTogglePlayPause = {
-                // With nothing tuned yet, the power controls start the first station.
-                if (state.current == null) playNext() else viewModel.togglePlayPause()
-            },
-            onSelectIndex = { index -> stations.getOrNull(index)?.let(viewModel::play) },
-            onNextStation = ::playNext,
-            modifier = Modifier.widthIn(max = 520.dp).fillMaxWidth(),
-        )
-
-        Spacer(Modifier.height(24.dp))
-
-        Text(
-            text = currentName,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground,
-            textAlign = TextAlign.Center,
-        )
-        Text(
-            text = stringResource(state.status.labelRes()),
-            style = MaterialTheme.typography.bodyLarge,
-            color = if (state.status == PlaybackStatus.PLAYING) RadioColors.Gold else MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .padding(top = 4.dp)
-                .semantics { liveRegion = LiveRegionMode.Polite },
-        )
-        if (state.status == PlaybackStatus.ERROR) {
-            TextButton(onClick = viewModel::togglePlayPause) {
-                Text(text = stringResource(R.string.action_retry), color = RadioColors.Gold)
+        if (maxHeight >= PinnedControlsMinHeight) {
+            Column {
+                controls()
+                stationList(Modifier.weight(1f).verticalScroll(rememberScrollState()))
+            }
+        } else {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                controls()
+                stationList(Modifier)
             }
         }
-
-        Spacer(Modifier.height(28.dp))
-
-        StationPresets(
-            stations = stations,
-            current = state.current,
-            onSelect = viewModel::play,
-            modifier = Modifier.widthIn(max = 520.dp).fillMaxWidth(),
-        )
     }
 }
 
@@ -126,7 +139,7 @@ private val CategoryOrder = listOf(
     StationCategory.RELIGIOUS,
 )
 
-/** Station buttons styled as the radio's presets, grouped by category, two per row. */
+/** Station buttons grouped by category, two per row. */
 @Composable
 private fun StationPresets(
     stations: List<Station>,
@@ -143,7 +156,7 @@ private fun StationPresets(
                 text = stringResource(category.labelRes()),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = RadioColors.Gold,
+                color = RadioColors.MutedText,
                 modifier = Modifier
                     .padding(top = 12.dp)
                     .semantics { heading() },
@@ -173,15 +186,15 @@ private fun PresetButton(name: String, selected: Boolean, onClick: () -> Unit, m
         selected = selected,
         modifier = modifier.heightIn(min = 56.dp),
         shape = CircleShape,
-        color = if (selected) RadioColors.Body else RadioColors.Cream,
-        contentColor = RadioColors.Brown,
-        border = BorderStroke(2.dp, RadioColors.Gold),
+        color = if (selected) RadioColors.Slate else Color.White,
+        contentColor = if (selected) Color.White else RadioColors.Icon,
+        border = BorderStroke(1.dp, if (selected) RadioColors.Slate else RadioColors.PresetBorder),
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Text(
                 text = name,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center,

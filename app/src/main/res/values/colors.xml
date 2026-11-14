@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Matches RadioColors.Background so launch does not flash a different color. -->
-    <color name="window_background">#151515</color>
+    <!-- Matches RadioColors.Surface so launch does not flash a different color. -->
+    <color name="window_background">#F2F2F2</color>
 </resources>

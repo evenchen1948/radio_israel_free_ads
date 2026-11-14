@@ -4,12 +4,13 @@
     <string name="no_station_selected">לא נבחרה תחנה</string>
     <string name="status_idle">בחרו תחנה</string>
     <string name="status_loading">מתחבר…</string>
-    <string name="status_playing">מתנגן</string>
+    <string name="status_playing">מתנגן עכשיו</string>
     <string name="status_paused">מושהה</string>
     <string name="status_error">לא הצלחנו להתחבר לתחנה</string>
     <string name="action_play">נגן</string>
     <string name="action_pause">השהה</string>
     <string name="action_retry">נסו שוב</string>
+    <string name="action_previous_station">התחנה הקודמת</string>
     <string name="action_next_station">התחנה הבאה</string>
     <string name="tuner_label">בורר תחנות</string>
     <string name="category_news">חדשות ואקטואליה</string>
