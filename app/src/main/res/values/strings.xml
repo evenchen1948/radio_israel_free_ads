@@ -12,4 +12,9 @@
     <string name="action_retry">נסו שוב</string>
     <string name="action_next_station">התחנה הבאה</string>
     <string name="tuner_label">בורר תחנות</string>
+    <string name="category_news">חדשות ואקטואליה</string>
+    <string name="category_music">מוזיקה</string>
+    <string name="category_talk">תרבות ושיחה</string>
+    <string name="category_regional">אזורי</string>
+    <string name="category_religious">דת ומסורת</string>
 </resources>

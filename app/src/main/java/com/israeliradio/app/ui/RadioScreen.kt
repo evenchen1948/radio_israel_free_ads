@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -36,6 +37,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.israeliradio.app.R
 import com.israeliradio.app.data.Station
+import com.israeliradio.app.data.StationCategory
 import com.israeliradio.app.player.PlaybackStatus
 import com.israeliradio.app.player.PlayerViewModel
 import com.israeliradio.app.ui.theme.RadioColors
@@ -115,7 +117,16 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
     }
 }
 
-/** Station buttons styled as the radio's presets, two per row. */
+/** Home screen order of the station groups. */
+private val CategoryOrder = listOf(
+    StationCategory.NEWS,
+    StationCategory.MUSIC,
+    StationCategory.TALK,
+    StationCategory.REGIONAL,
+    StationCategory.RELIGIOUS,
+)
+
+/** Station buttons styled as the radio's presets, grouped by category, two per row. */
 @Composable
 private fun StationPresets(
     stations: List<Station>,
@@ -124,18 +135,32 @@ private fun StationPresets(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        stations.chunked(2).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                row.forEach { station ->
-                    PresetButton(
-                        name = station.name,
-                        selected = station == current,
-                        onClick = { onSelect(station) },
-                        modifier = Modifier.weight(1f),
-                    )
+        CategoryOrder.forEach { category ->
+            val group = stations.filter { it.category == category }
+            if (group.isEmpty()) return@forEach
+
+            Text(
+                text = stringResource(category.labelRes()),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = RadioColors.Gold,
+                modifier = Modifier
+                    .padding(top = 12.dp)
+                    .semantics { heading() },
+            )
+            group.chunked(2).forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    row.forEach { station ->
+                        PresetButton(
+                            name = station.name,
+                            selected = station == current,
+                            onClick = { onSelect(station) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    // Keep a lone last button at half width.
+                    if (row.size == 1) Spacer(Modifier.weight(1f))
                 }
-                // Keep a lone last button at half width.
-                if (row.size == 1) Spacer(Modifier.weight(1f))
             }
         }
     }
@@ -157,11 +182,20 @@ private fun PresetButton(name: String, selected: Boolean, onClick: () -> Unit, m
                 text = name,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
             )
         }
     }
+}
+
+private fun StationCategory.labelRes(): Int = when (this) {
+    StationCategory.NEWS -> R.string.category_news
+    StationCategory.MUSIC -> R.string.category_music
+    StationCategory.TALK -> R.string.category_talk
+    StationCategory.REGIONAL -> R.string.category_regional
+    StationCategory.RELIGIOUS -> R.string.category_religious
 }
 
 private fun PlaybackStatus.labelRes(): Int = when (this) {
