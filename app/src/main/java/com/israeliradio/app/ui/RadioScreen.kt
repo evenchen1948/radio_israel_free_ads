@@ -1,5 +1,6 @@
 package com.israeliradio.app.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -78,6 +79,9 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
     var filter by rememberSaveable { mutableStateOf<StationCategory?>(null) }
     val isActive = state.status == PlaybackStatus.PLAYING || state.status == PlaybackStatus.LOADING
     val insets = WindowInsets.systemBars.asPaddingValues()
+
+    // Back returns from a category to the full list; from the full list it leaves the app.
+    BackHandler(enabled = filter != null) { filter = null }
 
     @Composable
     fun Card(station: Station, modifier: Modifier) {

@@ -66,7 +66,7 @@ fun PlayerBar(
             ) {
                 Text(
                     text = station.shortLabel(),
-                    color = RadioColors.Blue,
+                    color = RadioColors.BlueOnTint,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Black,
                     maxLines = 1,

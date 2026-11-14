@@ -96,7 +96,7 @@ fun StationCard(
             BasicText(
                 text = station.name,
                 style = TextStyle(
-                    color = if (isCurrent) RadioColors.Blue else RadioColors.Text,
+                    color = if (isCurrent) RadioColors.BlueOnTint else RadioColors.Text,
                     fontWeight = FontWeight.Black,
                     textAlign = TextAlign.Center,
                 ),
@@ -136,7 +136,7 @@ private val EqualizerRestingHeights = listOf(0.55f, 1f, 0.4f)
 
 /** Three small bars that bounce while the station is playing and rest otherwise. */
 @Composable
-private fun Equalizer(animate: Boolean, modifier: Modifier = Modifier, color: Color = RadioColors.Blue) {
+private fun Equalizer(animate: Boolean, modifier: Modifier = Modifier, color: Color = RadioColors.BlueOnTint) {
     val heights = if (animate) animatedBarHeights() else EqualizerRestingHeights
 
     Row(

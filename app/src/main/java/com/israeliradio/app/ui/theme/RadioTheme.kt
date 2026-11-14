@@ -15,6 +15,9 @@ object RadioColors {
     /** Tile behind the playing station. */
     val BlueTint = Color(0xFFE1F1FA)
 
+    /** Text and marks drawn on [BlueTint]; plain [Blue] is below 4.5:1 contrast there. */
+    val BlueOnTint = Color(0xFF005F91)
+
     /** Neutral tiles and unselected chips. */
     val Tile = Color(0xFFF3F5F7)
 
