@@ -1,11 +1,51 @@
 [
   {
+    "id": "kan-bet",
+    "name": "כאן ב'",
+    "category": "news",
+    "streamUrl": "https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/radio/kan_reshet_bet/live.livx/playlist.m3u8?renditions&fmp4",
+    "streamType": "hls",
+    "logo": "/logos/kan-bet.svg"
+  },
+  {
+    "id": "kan-gimel",
+    "name": "כאן גימל",
+    "category": "music",
+    "streamUrl": "https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/radio/kan_gimel/live.livx/playlist.m3u8?renditions&fmp4",
+    "streamType": "hls",
+    "logo": "/logos/kan-gimel.svg"
+  },
+  {
     "id": "kan-88",
     "name": "כאן 88",
     "category": "music",
     "streamUrl": "https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/radio/kan_88/live.livx/playlist.m3u8?renditions&fmp4",
     "streamType": "hls",
     "logo": "/logos/kan-88.svg"
+  },
+  {
+    "id": "kan-tarbut",
+    "name": "כאן תרבות",
+    "category": "talk",
+    "streamUrl": "https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/radio/kan_tarbut/live.livx/playlist.m3u8?renditions&fmp4",
+    "streamType": "hls",
+    "logo": "/logos/kan-tarbut.svg"
+  },
+  {
+    "id": "kan-kol-hamusica",
+    "name": "כאן קול המוסיקה",
+    "category": "music",
+    "streamUrl": "https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/radio/kan_kol_hamuzika/live.livx/playlist.m3u8?renditions&fmp4",
+    "streamType": "hls",
+    "logo": "/logos/kan-kol-hamusica.svg"
+  },
+  {
+    "id": "kan-reka",
+    "name": "כאן רקע",
+    "category": "talk",
+    "streamUrl": "https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/radio/kan_reka/live.livx/playlist.m3u8?renditions&fmp4",
+    "streamType": "hls",
+    "logo": "/logos/kan-reka.svg"
   },
   {
     "id": "galei-tzahal",
@@ -22,5 +62,61 @@
     "streamUrl": "https://glzwizzlv.bynetcdn.com/glglz_mp3",
     "streamType": "mp3",
     "logo": "/logos/galgalatz.svg"
+  },
+  {
+    "id": "103fm",
+    "name": "103FM",
+    "category": "talk",
+    "streamUrl": "https://cdn.cybercdn.live/103FM/Live/icecast.audio",
+    "streamType": "mp3",
+    "logo": "/logos/103fm.svg"
+  },
+  {
+    "id": "eco99fm",
+    "name": "eco99fm",
+    "category": "music",
+    "streamUrl": "https://99.mediacast.co.il/99fm_aac",
+    "streamType": "mp3",
+    "logo": "/logos/eco99fm.svg"
+  },
+  {
+    "id": "radio-tel-aviv-102fm",
+    "name": "רדיו תל אביב 102FM",
+    "category": "regional",
+    "streamUrl": "https://102.livecdn.biz/102fm_aac",
+    "streamType": "mp3",
+    "logo": "/logos/radio-tel-aviv-102fm.svg"
+  },
+  {
+    "id": "radio-haifa-1075",
+    "name": "רדיו חיפה 107.5",
+    "category": "regional",
+    "streamUrl": "https://1075.livecdn.biz/radiohaifa",
+    "streamType": "mp3",
+    "logo": "/logos/radio-haifa-1075.svg"
+  },
+  {
+    "id": "radios-100fm",
+    "name": "רדיוס 100FM",
+    "category": "music",
+    "streamUrl": "https://cdn.cybercdn.live/Radios_100FM/Audio/icecast.audio",
+    "streamType": "mp3",
+    "logo": "/logos/radios-100fm.svg"
+  },
+  {
+    "id": "kol-chai",
+    "name": "קול חי",
+    "category": "religious",
+    "streamUrl": "https://live.kcm.fm/live-new/hls.m3u8",
+    "streamType": "hls",
+    "logo": "/logos/kol-chai.svg"
+  },
+  {
+    "id": "kol-barama",
+    "name": "קול ברמה",
+    "category": "religious",
+    "streamUrl": "https://cdn.cybercdn.live/Kol_Barama/Live_Audio/icecast.audio",
+    "streamType": "mp3",
+    "logo": "/logos/kol-barama.svg"
   }
 ]

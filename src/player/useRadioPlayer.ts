@@ -4,8 +4,6 @@ import type { Station } from '../data/stations'
 
 export type PlayerStatus = 'idle' | 'loading' | 'playing' | 'paused' | 'error'
 
-const HLS_MIME = 'application/vnd.apple.mpegurl'
-
 /**
  * Owns the app's single <audio> element. Every station change tears the
  * previous stream down first, so two streams can never play at once.
@@ -35,10 +33,12 @@ export function useRadioPlayer() {
       teardown()
       setStatus('loading')
 
-      const needsHlsJs =
-        station.streamType === 'hls' && !audio.canPlayType(HLS_MIME) && Hls.isSupported()
+      // Prefer hls.js wherever it runs: built-in HLS on desktop/Android browsers
+      // is inconsistent (Chrome rejects Kol Chai's MP3-segment playlist). Native
+      // HLS is the fallback for browsers without MSE, i.e. Safari on iPhone.
+      const useHlsJs = station.streamType === 'hls' && Hls.isSupported()
 
-      if (needsHlsJs) {
+      if (useHlsJs) {
         const hls = new Hls()
         hlsRef.current = hls
         hls.on(Hls.Events.ERROR, (_event, data) => {
@@ -47,7 +47,7 @@ export function useRadioPlayer() {
         hls.loadSource(station.streamUrl)
         hls.attachMedia(audio)
       } else {
-        // MP3/AAC streams, and HLS where the browser plays it natively (Safari).
+        // MP3/AAC streams, and HLS where only the native player is available.
         audio.src = station.streamUrl
       }
 

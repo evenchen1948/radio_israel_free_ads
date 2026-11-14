@@ -1,3 +1,4 @@
+import { StationList } from './components/StationList'
 import { stations } from './data/stations'
 import { useRadioPlayer, type PlayerStatus } from './player/useRadioPlayer'
 
@@ -17,19 +18,7 @@ export default function App() {
     <main>
       <h1>רדיו ישראלי</h1>
 
-      <ul>
-        {stations.map((station) => (
-          <li key={station.id}>
-            <button
-              type="button"
-              onClick={() => play(station)}
-              aria-pressed={current?.id === station.id}
-            >
-              {station.name}
-            </button>
-          </li>
-        ))}
-      </ul>
+      <StationList stations={stations} currentId={current?.id ?? null} onSelect={play} />
 
       <section aria-label="נגן">
         <p>{current ? current.name : 'לא נבחרה תחנה'}</p>
