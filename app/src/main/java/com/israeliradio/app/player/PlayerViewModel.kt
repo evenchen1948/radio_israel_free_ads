@@ -1,17 +1,16 @@
 package com.israeliradio.app.player
 
 import android.app.Application
+import android.content.ComponentName
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
-import androidx.media3.common.AudioAttributes
-import androidx.media3.common.C
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MimeTypes
-import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
 import com.israeliradio.app.data.Station
 import com.israeliradio.app.data.StationRepository
-import com.israeliradio.app.data.StreamType
+import com.israeliradio.app.playback.PlaybackService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,85 +25,92 @@ data class PlayerUiState(
 )
 
 /**
- * Owns the app's single ExoPlayer for step 1 of the build order. Because there
- * is exactly one player, switching stations can never leave two streams playing.
- * Step 2 moves the player into the Media3 playback service.
+ * UI-side view of playback. The player itself lives in [PlaybackService]; this
+ * class only sends commands to it through a [MediaController] and mirrors its
+ * state, so the screen shows the truth even when playback was changed from the
+ * notification, the lock screen or a headset.
  */
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _uiState = MutableStateFlow(
-        PlayerUiState(stations = StationRepository(application).loadStations()),
-    )
+    private val stations = StationRepository(application).loadStations()
+    private val stationsById = stations.associateBy { it.id }
+
+    private val _uiState = MutableStateFlow(PlayerUiState(stations = stations))
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
 
-    private val audioAttributes = AudioAttributes.Builder()
-        .setUsage(C.USAGE_MEDIA)
-        .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
-        .build()
+    private val controllerFuture = MediaController.Builder(
+        application,
+        SessionToken(application, ComponentName(application, PlaybackService::class.java)),
+    ).buildAsync()
 
-    private val player: ExoPlayer = ExoPlayer.Builder(application)
-        .setAudioAttributes(audioAttributes, /* handleAudioFocus = */ true)
-        .build()
+    private var controller: MediaController? = null
+
+    /** A station tapped before the service connection was ready. */
+    private var pendingStation: Station? = null
 
     private val listener = object : Player.Listener {
-        override fun onPlaybackStateChanged(playbackState: Int) {
-            if (playbackState == Player.STATE_BUFFERING && player.playWhenReady) {
-                setStatus(PlaybackStatus.LOADING)
-            }
-        }
-
-        override fun onIsPlayingChanged(isPlaying: Boolean) {
-            if (isPlaying) setStatus(PlaybackStatus.PLAYING)
-        }
-
-        override fun onPlayerError(error: PlaybackException) {
-            setStatus(PlaybackStatus.ERROR)
-        }
+        override fun onEvents(player: Player, events: Player.Events) = syncFrom(player)
     }
 
     init {
-        player.addListener(listener)
+        controllerFuture.addListener(
+            {
+                val connected = runCatching { controllerFuture.get() }.getOrNull()
+                if (connected == null) {
+                    if (!controllerFuture.isCancelled) {
+                        _uiState.update { it.copy(status = PlaybackStatus.ERROR) }
+                    }
+                } else {
+                    controller = connected
+                    connected.addListener(listener)
+                    val queued = pendingStation
+                    pendingStation = null
+                    if (queued != null) play(queued) else syncFrom(connected)
+                }
+            },
+            ContextCompat.getMainExecutor(application),
+        )
     }
 
     fun play(station: Station) {
-        _uiState.update { it.copy(current = station) }
-        start(station)
+        val controller = controller
+        if (controller == null) {
+            pendingStation = station
+            _uiState.update { it.copy(current = station, status = PlaybackStatus.LOADING) }
+            return
+        }
+        // Only the id is sent; the service resolves it to the stream.
+        // setMediaItem replaces whatever was playing before.
+        controller.setMediaItem(MediaItem.Builder().setMediaId(station.id).build())
+        controller.prepare()
+        controller.play()
     }
 
     fun togglePlayPause() {
-        val state = _uiState.value
-        val station = state.current ?: return
-        when (state.status) {
-            PlaybackStatus.PLAYING, PlaybackStatus.LOADING -> {
-                // Drop the connection instead of buffering a live stream while paused,
-                // so resuming rejoins the live broadcast.
-                player.stop()
-                setStatus(PlaybackStatus.PAUSED)
-            }
-            else -> start(station)
+        val controller = controller ?: return
+        when (_uiState.value.status) {
+            PlaybackStatus.PLAYING, PlaybackStatus.LOADING -> controller.pause()
+            // The service reconnects to the live stream on play, including after an error.
+            else -> controller.play()
         }
     }
 
-    private fun start(station: Station) {
-        setStatus(PlaybackStatus.LOADING)
-        val item = MediaItem.Builder()
-            .setMediaId(station.id)
-            .setUri(station.streamUrl)
-            // HLS is declared explicitly; MP3/AAC streams are detected from the data.
-            .setMimeType(if (station.streamType == StreamType.HLS) MimeTypes.APPLICATION_M3U8 else null)
-            .build()
-        // setMediaItem replaces whatever was playing before.
-        player.setMediaItem(item)
-        player.prepare()
-        player.play()
-    }
-
-    private fun setStatus(status: PlaybackStatus) {
-        _uiState.update { it.copy(status = status) }
+    private fun syncFrom(player: Player) {
+        val current = player.currentMediaItem?.mediaId?.let(stationsById::get)
+        val status = when {
+            current == null -> PlaybackStatus.IDLE
+            player.playerError != null -> PlaybackStatus.ERROR
+            player.isPlaying -> PlaybackStatus.PLAYING
+            player.playWhenReady && player.playbackState != Player.STATE_READY -> PlaybackStatus.LOADING
+            // Ready but silent: paused by the user or by another app holding audio focus.
+            else -> PlaybackStatus.PAUSED
+        }
+        _uiState.update { it.copy(current = current, status = status) }
     }
 
     override fun onCleared() {
-        player.removeListener(listener)
-        player.release()
+        controller?.removeListener(listener)
+        // Releases only this connection; the service keeps playing.
+        MediaController.releaseFuture(controllerFuture)
     }
 }
