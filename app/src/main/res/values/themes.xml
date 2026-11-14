@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Window theme only; all UI styling lives in Compose. -->
-    <style name="Theme.IsraeliRadio" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.IsraeliRadio" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
 </resources>

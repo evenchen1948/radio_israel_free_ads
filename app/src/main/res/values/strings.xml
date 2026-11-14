@@ -9,4 +9,7 @@
     <string name="status_error">לא הצלחנו להתחבר לתחנה</string>
     <string name="action_play">נגן</string>
     <string name="action_pause">השהה</string>
+    <string name="action_retry">נסו שוב</string>
+    <string name="action_next_station">התחנה הבאה</string>
+    <string name="tuner_label">בורר תחנות</string>
 </resources>
