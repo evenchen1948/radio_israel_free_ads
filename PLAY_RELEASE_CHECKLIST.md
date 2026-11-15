@@ -17,7 +17,10 @@ re-check the linked pages before each release.
   `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS` and `WAKE_LOCK`.
 - **Fixed:** Media3 added `ACCESS_NETWORK_STATE`; it is now removed in the manifest. The app was then
   played through start, network loss and recovery with no security exceptions.
-- **Kept on purpose:** `com.israeliradio.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. This is not an
+- **Checked on 15 November 2026:** the merged release manifest has no
+  `com.google.android.gms.permission.AD_ID`, and the release dependencies are only AndroidX, Kotlin,
+  kotlinx and Guava: no ads or analytics SDK.
+- **Kept on purpose:** `io.github.evenchen1948.radioil.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. This is not an
   Android permission. AndroidX defines it inside the app, at signature level, to protect the app's own
   broadcast receivers. Users never see it and it gives access to nothing.
 - `WAKE_LOCK` is needed: it keeps the CPU and Wi-Fi awake while streaming with the screen off.
@@ -43,9 +46,12 @@ re-check the linked pages before each release.
 - **No cleartext traffic.** `usesCleartextTraffic="false"`, plus a network security config that
   forbids cleartext for every domain (Android plans to deprecate the attribute). Every stream URL is HTTPS.
 - **No hardcoded secrets.** The code and the full git history were scanned; nothing found.
-- **Signing set up, but not signed yet.** `./gradlew bundleRelease` signs the AAB when these
-  environment variables are set: `RADIO_KEYSTORE_FILE`, `RADIO_KEYSTORE_PASSWORD`, `RADIO_KEY_ALIAS`,
-  `RADIO_KEY_PASSWORD`. Without them it builds an unsigned AAB. Creating the keystore is your step (section 2).
+- **Signed.** `./gradlew bundleRelease` signs the AAB with the upload key. The keystore location,
+  alias and passwords come from `keystore.properties` in the project root (`storeFile`,
+  `storePassword`, `keyAlias`, `keyPassword`); the `RADIO_KEYSTORE_FILE`, `RADIO_KEYSTORE_PASSWORD`,
+  `RADIO_KEY_ALIAS` and `RADIO_KEY_PASSWORD` environment variables are the fallback. With neither it
+  builds an unsigned AAB. The upload keystore is `upload-keystore.jks` in the project root, alias
+  `upload`. Both files are git-ignored: back them up somewhere safe (section 2).
 - **Fixed: backup rules.** Backup and device transfer are switched off explicitly for Android 12+.
 
 ### 64-bit and 16 KB page size
@@ -100,8 +106,14 @@ Tested with the R8 release build on an Android 15 emulator. No crashes, no ANRs,
 - `versionCode` is 1 and `versionName` is now `1.0.0`.
 - **Fixed: adaptive icon added** (there was none): three white equalizer bars on blue, with a
   monochrome layer for themed icons.
-- `applicationId` is `com.israeliradio.app`. **This is a placeholder I chose and it is permanent once
-  published.** Confirm or change it before the first upload (section 2).
+- `applicationId` and `namespace` are `io.github.evenchen1948.radioil`, as registered in Play
+  Console. The ID is permanent once published.
+- The app name is "רדיו ישראל".
+
+### Privacy policy link
+
+- **Added.** A "מדיניות הפרטיות" link at the end of the home screen opens
+  https://evenchen1948.github.io/arnav/privacy.html in the browser. Not yet tapped on a device.
 
 ### Lint
 
@@ -112,16 +124,12 @@ Tested with the R8 release build on an Android 15 emulator. No crashes, no ANRs,
 
 ### Blocking, before the first upload
 
-1. **Confirm the application ID.** `com.israeliradio.app` cannot be changed after publishing. If you
-   want a different one (usually your own reversed domain), tell me and I will change it everywhere.
-2. **Create your upload keystore and keep it safe.** For example:
-   `keytool -genkeypair -v -keystore upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload`.
-   Store the file outside the repo, back it up, and set the four `RADIO_KEYSTORE_*` environment
-   variables. Then run `./gradlew bundleRelease`; the signed bundle is
+1. **Application ID: done.** It is `io.github.evenchen1948.radioil`.
+2. **Back up the upload keystore.** Copy `upload-keystore.jks` and `keystore.properties` from the
+   project root to a safe place outside this folder. They are not in git, so a lost disk loses them,
+   and replacing a lost upload key needs a request to Google Play support. The signed bundle is
    `app/build/outputs/bundle/release/app-release.aab`.
-3. **Publish a privacy policy.** Play requires one for every app, even with no data collected: a public,
-   non-PDF web page, linked in Play Console **and** reachable inside the app. The app has no such link
-   yet. Give me the URL and I will add it.
+3. **Privacy policy: linked in the app.** Enter the same URL in Play Console (App content).
 4. **Check your rights to the content.** The app streams third-party stations and shows their names
    (and later their logos). Play's intellectual property policy makes you responsible for having
    permission. Review each broadcaster's terms; some forbid embedding their streams in other apps.

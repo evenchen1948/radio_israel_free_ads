@@ -1,19 +1,31 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
 
-// Release signing comes from environment variables so no secret is ever stored in the repo.
-// Without them, release builds are produced unsigned.
-val releaseKeystoreFile: String? = System.getenv("RADIO_KEYSTORE_FILE")
+// Release signing reads the upload keystore location and passwords from keystore.properties in
+// the project root. That file and the keystore are git-ignored, so no secret is stored in the repo.
+// The RADIO_KEYSTORE_* environment variables are used when the file is absent (for example on CI).
+// With neither, release builds are produced unsigned.
+val keystoreProperties = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
+fun signingValue(property: String, envVariable: String): String? =
+    keystoreProperties.getProperty(property) ?: System.getenv(envVariable)
+
+val releaseKeystoreFile: String? = signingValue("storeFile", "RADIO_KEYSTORE_FILE")
 
 android {
-    namespace = "com.israeliradio.app"
+    namespace = "io.github.evenchen1948.radioil"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.israeliradio.app"
+        applicationId = "io.github.evenchen1948.radioil"
         minSdk = 26
         targetSdk = 37
         versionCode = 1
@@ -23,10 +35,11 @@ android {
     signingConfigs {
         if (releaseKeystoreFile != null) {
             create("release") {
-                storeFile = file(releaseKeystoreFile)
-                storePassword = System.getenv("RADIO_KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("RADIO_KEY_ALIAS")
-                keyPassword = System.getenv("RADIO_KEY_PASSWORD")
+                // A relative path is resolved against the project root.
+                storeFile = rootProject.file(releaseKeystoreFile)
+                storePassword = signingValue("storePassword", "RADIO_KEYSTORE_PASSWORD")
+                keyAlias = signingValue("keyAlias", "RADIO_KEY_ALIAS")
+                keyPassword = signingValue("keyPassword", "RADIO_KEY_PASSWORD")
             }
         }
     }

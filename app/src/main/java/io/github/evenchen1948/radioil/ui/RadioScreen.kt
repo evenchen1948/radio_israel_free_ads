@@ -1,4 +1,4 @@
-package com.israeliradio.app.ui
+package io.github.evenchen1948.radioil.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -48,12 +49,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.israeliradio.app.R
-import com.israeliradio.app.data.Station
-import com.israeliradio.app.data.StationCategory
-import com.israeliradio.app.player.PlaybackStatus
-import com.israeliradio.app.player.PlayerViewModel
-import com.israeliradio.app.ui.theme.RadioColors
+import io.github.evenchen1948.radioil.R
+import io.github.evenchen1948.radioil.data.Station
+import io.github.evenchen1948.radioil.data.StationCategory
+import io.github.evenchen1948.radioil.player.PlaybackStatus
+import io.github.evenchen1948.radioil.player.PlayerViewModel
+import io.github.evenchen1948.radioil.ui.theme.RadioColors
 import java.time.LocalTime
 
 private val ScreenPadding = 20.dp
@@ -172,6 +173,8 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
                     }
                 }
             }
+
+            item(key = "privacy") { PrivacyPolicyLink() }
         }
 
         // The bar keeps showing the last station while it slides away.
@@ -293,6 +296,38 @@ private fun SectionHeader(title: String, onShowAll: (() -> Unit)?) {
                     fontWeight = FontWeight.Medium,
                 )
             }
+        }
+    }
+}
+
+/** Footer link that opens the privacy policy in the browser, as Google Play requires. */
+@Composable
+private fun PrivacyPolicyLink() {
+    val uriHandler = LocalUriHandler.current
+    val url = stringResource(R.string.privacy_policy_url)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .heightIn(min = 48.dp)
+                .clip(CircleShape)
+                .clickable(role = Role.Button) {
+                    // No browser installed: nothing to open, and nothing worth crashing over.
+                    runCatching { uriHandler.openUri(url) }
+                }
+                .padding(horizontal = 16.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = stringResource(R.string.action_privacy_policy),
+                color = RadioColors.Blue,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+            )
         }
     }
 }

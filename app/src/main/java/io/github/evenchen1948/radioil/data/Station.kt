@@ -1,4 +1,4 @@
-package com.israeliradio.app.data
+package io.github.evenchen1948.radioil.data
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

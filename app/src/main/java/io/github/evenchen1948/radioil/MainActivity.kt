@@ -1,4 +1,4 @@
-package com.israeliradio.app
+package io.github.evenchen1948.radioil
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -15,8 +15,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
-import com.israeliradio.app.ui.RadioScreen
-import com.israeliradio.app.ui.theme.RadioTheme
+import io.github.evenchen1948.radioil.ui.RadioScreen
+import io.github.evenchen1948.radioil.ui.theme.RadioTheme
 
 class MainActivity : ComponentActivity() {
 

@@ -1,4 +1,4 @@
-package com.israeliradio.app.data
+package io.github.evenchen1948.radioil.data
 
 import android.content.Context
 import kotlinx.serialization.json.Json

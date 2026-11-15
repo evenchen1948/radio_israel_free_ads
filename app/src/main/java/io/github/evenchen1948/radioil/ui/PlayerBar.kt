@@ -1,4 +1,4 @@
-package com.israeliradio.app.ui
+package io.github.evenchen1948.radioil.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -31,8 +31,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.israeliradio.app.data.Station
-import com.israeliradio.app.ui.theme.RadioColors
+import io.github.evenchen1948.radioil.data.Station
+import io.github.evenchen1948.radioil.ui.theme.RadioColors
 
 /** Height the bar occupies, used to reserve space under the list so nothing shifts when it appears. */
 val PlayerBarHeight = 72.dp

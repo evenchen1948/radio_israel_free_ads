@@ -1,4 +1,4 @@
-package com.israeliradio.app.playback
+package io.github.evenchen1948.radioil.playback
 
 import androidx.annotation.OptIn
 import androidx.media3.common.ForwardingPlayer

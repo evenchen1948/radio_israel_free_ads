@@ -1,4 +1,4 @@
-package com.israeliradio.app.player
+package io.github.evenchen1948.radioil.player
 
 import android.app.Application
 import android.content.ComponentName
@@ -8,9 +8,9 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import com.israeliradio.app.data.Station
-import com.israeliradio.app.data.StationRepository
-import com.israeliradio.app.playback.PlaybackService
+import io.github.evenchen1948.radioil.data.Station
+import io.github.evenchen1948.radioil.data.StationRepository
+import io.github.evenchen1948.radioil.playback.PlaybackService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

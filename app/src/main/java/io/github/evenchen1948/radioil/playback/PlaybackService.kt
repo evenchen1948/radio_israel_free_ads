@@ -1,4 +1,4 @@
-package com.israeliradio.app.playback
+package io.github.evenchen1948.radioil.playback
 
 import android.app.PendingIntent
 import android.content.Intent
@@ -18,11 +18,11 @@ import androidx.media3.session.SessionError
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
-import com.israeliradio.app.MainActivity
-import com.israeliradio.app.R
-import com.israeliradio.app.data.Station
-import com.israeliradio.app.data.StationRepository
-import com.israeliradio.app.data.StreamType
+import io.github.evenchen1948.radioil.MainActivity
+import io.github.evenchen1948.radioil.R
+import io.github.evenchen1948.radioil.data.Station
+import io.github.evenchen1948.radioil.data.StationRepository
+import io.github.evenchen1948.radioil.data.StreamType
 
 /**
  * Owns the app's only player. Running it in a foreground media service keeps

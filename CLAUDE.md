@@ -8,7 +8,7 @@ Native Android app in Kotlin + Jetpack Compose. Requirements are in SPEC.md. Rea
 - Commit after each step that works
 - Push after every commit (remote `origin`, branch `main`)
 - Every change must keep the app compliant with Google Play policies. See PLAY_RELEASE_CHECKLIST.md
-- Never commit keystores, signing passwords or other secrets; release signing reads them from environment variables
+- Never commit keystores, signing passwords or other secrets; release signing reads them from the git-ignored `keystore.properties` (or the `RADIO_KEYSTORE_*` environment variables)
 - Never invent stream URLs; verify every stream plays before adding it
 - UI text in Hebrew via strings.xml, RTL. Code, comments and commits in English
 - Do not add dependencies beyond the SPEC without asking first
@@ -21,4 +21,4 @@ Native Android app in Kotlin + Jetpack Compose. Requirements are in SPEC.md. Rea
 - `./gradlew assembleDebug` — build a debug APK
 - `./gradlew installDebug` — install on a connected device or emulator
 - `./gradlew test` — run unit tests
-- `./gradlew bundleRelease` — build the release AAB (signed when the `RADIO_KEYSTORE_*` environment variables are set, otherwise unsigned)
+- `./gradlew bundleRelease` — build the release AAB (signed when `keystore.properties` exists or the `RADIO_KEYSTORE_*` environment variables are set, otherwise unsigned)

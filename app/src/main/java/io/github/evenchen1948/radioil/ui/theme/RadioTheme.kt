@@ -1,4 +1,4 @@
-package com.israeliradio.app.ui.theme
+package io.github.evenchen1948.radioil.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme

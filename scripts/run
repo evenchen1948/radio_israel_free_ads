@@ -3,7 +3,7 @@
 # Usage (Git Bash, from anywhere):  scripts/run
 set -euo pipefail
 
-APP_ID="com.israeliradio.app"
+APP_ID="io.github.evenchen1948.radioil"
 MAIN_ACTIVITY=".MainActivity"
 MIN_JAVA=17
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">רדיו ישראלי</string>
+    <string name="app_name">רדיו ישראל</string>
 
     <string name="greeting_morning">בוקר טוב</string>
     <string name="greeting_afternoon">צהריים טובים</string>
@@ -28,4 +28,7 @@
     <string name="action_play">נגן</string>
     <string name="action_pause">השהה</string>
     <string name="action_retry">נסו שוב</string>
+
+    <string name="action_privacy_policy">מדיניות הפרטיות</string>
+    <string name="privacy_policy_url" translatable="false">https://evenchen1948.github.io/arnav/privacy.html</string>
 </resources>
