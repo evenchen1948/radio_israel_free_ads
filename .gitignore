@@ -25,3 +25,6 @@ signing.properties
 
 # Local Claude Code settings
 .claude/settings.local.json
+
+# Android Studio project settings
+.idea/
