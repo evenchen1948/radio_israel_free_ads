@@ -13,7 +13,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.BiasAlignment
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -84,8 +93,14 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
     val isActive = state.status == PlaybackStatus.PLAYING || state.status == PlaybackStatus.LOADING
     val insets = WindowInsets.systemBars.asPaddingValues()
 
-    // Back returns from a category to the full list; from the full list it leaves the app.
-    BackHandler(enabled = filter != null) { filter = null }
+    var showFavorites by rememberSaveable { mutableStateOf(false) }
+    val favoriteIds = state.favoriteIds
+
+    // Back returns from a tab to the full list; from the full list it leaves the app.
+    BackHandler(enabled = filter != null || showFavorites) {
+        filter = null
+        showFavorites = false
+    }
 
     // The expanded player closes first: the handler registered last wins.
     var playerExpanded by rememberSaveable { mutableStateOf(false) }
@@ -115,7 +130,9 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
             },
             isCurrent = isCurrent,
             isPlaying = isCurrent && state.status == PlaybackStatus.PLAYING,
+            isFavorite = favoriteIds?.contains(station.id) == true,
             onClick = { viewModel.play(station) },
+            onToggleFavorite = { viewModel.toggleFavorite(station) },
             modifier = modifier,
         )
     }
@@ -148,14 +165,35 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
 
             item(key = "chips") {
                 CategoryChips(
+                    favoritesSelected = showFavorites,
                     selected = filter,
-                    onSelect = { filter = it },
+                    onSelectFavorites = {
+                        filter = null
+                        showFavorites = true
+                    },
+                    onSelect = {
+                        filter = it
+                        showFavorites = false
+                    },
                     modifier = Modifier.padding(top = 20.dp),
                 )
             }
 
             val selectedCategory = filter
-            if (selectedCategory == null) {
+            if (showFavorites) {
+                val starred = orderedStations.filter { favoriteIds?.contains(it.id) == true }
+                when {
+                    // Still reading the saved favorites: show nothing rather than a false "empty".
+                    favoriteIds == null -> Unit
+                    starred.isEmpty() -> item(key = "favorites-empty") { FavoritesEmptyState() }
+                    else -> {
+                        item(key = "section-favorites") {
+                            SectionHeader(title = stringResource(R.string.tab_favorites), onShowAll = null)
+                        }
+                        stationGrid(starred) { station, modifier -> Card(station, modifier) }
+                    }
+                }
+            } else if (selectedCategory == null) {
                 CategoryOrder.forEach { category ->
                     val group = state.stations.filter { it.category == category }
                     if (group.isEmpty()) return@forEach
@@ -178,18 +216,8 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
                 item(key = "section-$selectedCategory") {
                     SectionHeader(title = stringResource(selectedCategory.labelRes()), onShowAll = null)
                 }
-                val rows = state.stations.filter { it.category == selectedCategory }.chunked(2)
-                items(rows, key = { row -> row.first().id }) { row ->
-                    Row(
-                        modifier = Modifier
-                            .padding(horizontal = ScreenPadding)
-                            .padding(bottom = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(CardSpacing),
-                    ) {
-                        row.forEach { station -> Card(station, Modifier.weight(1f)) }
-                        // Keep a lone last card at half width.
-                        if (row.size == 1) Spacer(Modifier.weight(1f))
-                    }
+                stationGrid(state.stations.filter { it.category == selectedCategory }) { station, modifier ->
+                    Card(station, modifier)
                 }
             }
 
@@ -240,8 +268,10 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
                     isPlaying = state.status == PlaybackStatus.PLAYING,
                     isError = state.status == PlaybackStatus.ERROR,
                     isActive = isActive,
+                    isFavorite = favoriteIds?.contains(station.id) == true,
                     playPauseLabel = playPauseLabel(state.status),
                     onTogglePlayPause = viewModel::togglePlayPause,
+                    onToggleFavorite = { viewModel.toggleFavorite(station) },
                     onPrevious = { playNeighbour(-1) },
                     onNext = { playNeighbour(1) },
                     onCollapse = { playerExpanded = false },
@@ -260,10 +290,80 @@ private fun playPauseLabel(status: PlaybackStatus): String = stringResource(
     },
 )
 
-/** Horizontally scrolling filter pills: "all" followed by one per category. */
+/** Stations two to a row, as shown for a single category and for the favorites. */
+private fun LazyListScope.stationGrid(
+    stations: List<Station>,
+    card: @Composable (Station, Modifier) -> Unit,
+) {
+    items(stations.chunked(2), key = { row -> row.first().id }) { row ->
+        Row(
+            modifier = Modifier
+                .padding(horizontal = ScreenPadding)
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(CardSpacing),
+        ) {
+            row.forEach { station -> card(station, Modifier.weight(1f)) }
+            // Keep a lone last card at half width.
+            if (row.size == 1) Spacer(Modifier.weight(1f))
+        }
+    }
+}
+
+/**
+ * Shown in the favorites tab before any station is starred: the 1920s radio
+ * illustration with a short explanation of how to add a favorite.
+ */
+@Composable
+private fun FavoritesEmptyState() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = ScreenPadding)
+            .padding(top = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Image(
+            painter = painterResource(R.drawable.radio_1920s_bg),
+            contentDescription = stringResource(R.string.favorites_empty_image),
+            // The artwork is a tall backdrop; this frames the radio and its horn.
+            contentScale = ContentScale.Crop,
+            alignment = BiasAlignment(horizontalBias = 0f, verticalBias = 0.29f),
+            modifier = Modifier
+                .widthIn(max = 420.dp)
+                .fillMaxWidth()
+                .aspectRatio(4f / 3f)
+                .clip(RoundedCornerShape(16.dp)),
+        )
+        Text(
+            text = stringResource(R.string.favorites_empty_title),
+            color = RadioColors.Text,
+            fontSize = 22.sp,
+            fontFamily = SerifFamily,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .padding(top = 24.dp)
+                .semantics { heading() },
+        )
+        Text(
+            text = stringResource(R.string.favorites_empty_message),
+            color = RadioColors.SecondaryText,
+            fontSize = 15.sp,
+            lineHeight = 22.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .widthIn(max = 320.dp),
+        )
+    }
+}
+
+/** Horizontally scrolling filter pills: favorites, "all", then one per category. */
 @Composable
 private fun CategoryChips(
+    favoritesSelected: Boolean,
     selected: StationCategory?,
+    onSelectFavorites: () -> Unit,
     onSelect: (StationCategory?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -272,13 +372,24 @@ private fun CategoryChips(
         contentPadding = PaddingValues(horizontal = ScreenPadding),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        item(key = "favorites") {
+            Chip(
+                label = stringResource(R.string.tab_favorites),
+                selected = favoritesSelected,
+                onClick = onSelectFavorites,
+            )
+        }
         item(key = "all") {
-            Chip(label = stringResource(R.string.filter_all), selected = selected == null, onClick = { onSelect(null) })
+            Chip(
+                label = stringResource(R.string.filter_all),
+                selected = !favoritesSelected && selected == null,
+                onClick = { onSelect(null) },
+            )
         }
         items(CategoryOrder, key = { it.name }) { category ->
             Chip(
                 label = stringResource(category.labelRes()),
-                selected = selected == category,
+                selected = !favoritesSelected && selected == category,
                 onClick = { onSelect(category) },
             )
         }

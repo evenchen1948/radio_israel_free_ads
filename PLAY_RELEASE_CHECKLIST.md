@@ -148,7 +148,8 @@ Tested with the R8 release build on an Android 15 emulator. No crashes, no ANRs,
    the impact if the system interrupts it, choose the "Media playback" use case, and link a short video
    showing a user starting playback and it continuing in the background.
 9. **Data safety form.** Required for every app. The app itself collects and shares no user data: no
-   accounts, analytics or ads. Note that each station's server sees the listener's IP address when
+   accounts, analytics or ads. Favorite stations are saved on the device only (DataStore) and are
+   never sent anywhere, so they do not count as collected data. Note that each station's server sees the listener's IP address when
    streaming; say so in the privacy policy.
 10. **Other App content forms:** privacy policy URL, ads (none), app access (no login), content rating
     questionnaire, target audience and content, news app declaration (answer for an app that only

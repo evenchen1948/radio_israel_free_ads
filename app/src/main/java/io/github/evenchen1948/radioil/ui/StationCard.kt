@@ -58,7 +58,9 @@ fun StationCard(
     subtitle: String,
     isCurrent: Boolean,
     isPlaying: Boolean,
+    isFavorite: Boolean,
     onClick: () -> Unit,
+    onToggleFavorite: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -86,23 +88,34 @@ fun StationCard(
                 .fillMaxWidth()
                 .height(TileHeight)
                 .background(RadioColors.Surface, TileShape)
-                .border(1.dp, if (isCurrent) RadioColors.Gold else RadioColors.Outline, TileShape)
-                .padding(12.dp),
-            contentAlignment = Alignment.Center,
+                .border(1.dp, if (isCurrent) RadioColors.Gold else RadioColors.Outline, TileShape),
         ) {
-            StationTileLabel(
-                station = station,
-                mainColor = if (isCurrent) RadioColors.Gold else RadioColors.Text,
-                maxMainSize = 44.sp,
-                captionSize = 11.sp,
-                captionGap = 2.dp,
-            )
-            if (isCurrent) {
-                Equalizer(
-                    animate = isPlaying,
-                    modifier = Modifier.align(Alignment.BottomStart),
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .padding(12.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                StationTileLabel(
+                    station = station,
+                    mainColor = if (isCurrent) RadioColors.Gold else RadioColors.Text,
+                    maxMainSize = 44.sp,
+                    captionSize = 11.sp,
+                    captionGap = 2.dp,
                 )
+                if (isCurrent) {
+                    Equalizer(
+                        animate = isPlaying,
+                        modifier = Modifier.align(Alignment.BottomStart),
+                    )
+                }
             }
+            // Its own control: a tap here stars the station without playing it.
+            FavoriteToggle(
+                isFavorite = isFavorite,
+                onToggle = onToggleFavorite,
+                modifier = Modifier.align(Alignment.TopEnd),
+            )
         }
 
         Text(

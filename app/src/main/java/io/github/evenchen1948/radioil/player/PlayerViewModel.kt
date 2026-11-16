@@ -4,10 +4,12 @@ import android.app.Application
 import android.content.ComponentName
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import io.github.evenchen1948.radioil.data.FavoritesRepository
 import io.github.evenchen1948.radioil.data.Station
 import io.github.evenchen1948.radioil.data.StationRepository
 import io.github.evenchen1948.radioil.playback.PlaybackService
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 enum class PlaybackStatus { IDLE, LOADING, PLAYING, PAUSED, ERROR }
 
@@ -22,6 +25,8 @@ data class PlayerUiState(
     val stations: List<Station> = emptyList(),
     val current: Station? = null,
     val status: PlaybackStatus = PlaybackStatus.IDLE,
+    /** Ids of the starred stations; null until they have been read from storage. */
+    val favoriteIds: Set<String>? = null,
 )
 
 /**
@@ -34,6 +39,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private val stations = StationRepository(application).loadStations()
     private val stationsById = stations.associateBy { it.id }
+    private val favorites = FavoritesRepository(application)
 
     private val _uiState = MutableStateFlow(PlayerUiState(stations = stations))
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
@@ -53,6 +59,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     init {
+        viewModelScope.launch {
+            favorites.favoriteIds.collect { ids -> _uiState.update { it.copy(favoriteIds = ids) } }
+        }
         controllerFuture.addListener(
             {
                 val connected = runCatching { controllerFuture.get() }.getOrNull()
@@ -93,6 +102,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             // The service reconnects to the live stream on play, including after an error.
             else -> controller.play()
         }
+    }
+
+    fun toggleFavorite(station: Station) {
+        viewModelScope.launch { favorites.toggle(station.id) }
     }
 
     private fun syncFrom(player: Player) {

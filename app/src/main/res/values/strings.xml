@@ -15,6 +15,13 @@
     <string name="category_religious">דת</string>
     <string name="action_show_all">הצג הכול</string>
 
+    <string name="tab_favorites">מועדפים</string>
+    <string name="action_add_favorite">הוסף למועדפים</string>
+    <string name="action_remove_favorite">הסר מהמועדפים</string>
+    <string name="favorites_empty_title">עדיין אין מועדפים</string>
+    <string name="favorites_empty_message">כדי להוסיף תחנה למועדפים, הקישו על הכוכב שבפינת התחנה</string>
+    <string name="favorites_empty_image">איור של מקלט רדיו משנות העשרים עם רמקול שופר</string>
+
     <!-- Card subtitle for the current station: category, then playback status. -->
     <string name="card_subtitle_current">%1$s • %2$s</string>
 

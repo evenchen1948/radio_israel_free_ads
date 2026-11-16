@@ -83,8 +83,10 @@ fun PlayerScreen(
     isPlaying: Boolean,
     isError: Boolean,
     isActive: Boolean,
+    isFavorite: Boolean,
     playPauseLabel: String,
     onTogglePlayPause: () -> Unit,
+    onToggleFavorite: () -> Unit,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
     onCollapse: () -> Unit,
@@ -120,6 +122,13 @@ fun PlayerScreen(
                 )
             }
             StatusLabel(text = statusText, isPlaying = isPlaying, isError = isError)
+            OutlinedRoundButton(
+                label = favoriteLabel(isFavorite),
+                onClick = onToggleFavorite,
+                modifier = Modifier.align(Alignment.CenterEnd),
+            ) {
+                drawStar(filled = isFavorite, radius = size.minDimension * 0.2f)
+            }
         }
 
         // The disc takes whatever height is left, so short screens shrink it first.
@@ -203,7 +212,7 @@ private fun StatusLabel(text: String, isPlaying: Boolean, isError: Boolean) {
         else -> RadioColors.SecondaryText
     }
     Row(
-        // Leaves room for the round button at the start edge.
+        // Leaves room for the round buttons at both edges.
         modifier = Modifier
             .padding(horizontal = 60.dp)
             .semantics { liveRegion = LiveRegionMode.Polite },
