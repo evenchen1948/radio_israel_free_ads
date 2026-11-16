@@ -16,10 +16,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.BiasAlignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -72,6 +70,13 @@ import java.time.LocalTime
 private val ScreenPadding = 20.dp
 private val CardWidth = 150.dp
 private val CardSpacing = 12.dp
+
+/**
+ * Black drawn over the favorites artwork so text on it keeps its contrast.
+ * At this strength gold and off-white text reach 4.5:1 even on the brass horn;
+ * grey text does not, so the favorites tab uses off-white for it instead.
+ */
+private const val FAVORITES_SCRIM_ALPHA = 0.72f
 
 /** Order of the category chips and of the sections on the home screen. */
 private val CategoryOrder = listOf(
@@ -128,6 +133,8 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
             } else {
                 category
             },
+            // Grey is too faint over the favorites artwork.
+            subtitleColor = if (showFavorites) RadioColors.Text else RadioColors.SecondaryText,
             isCurrent = isCurrent,
             isPlaying = isCurrent && state.status == PlaybackStatus.PLAYING,
             isFavorite = favoriteIds?.contains(station.id) == true,
@@ -142,6 +149,11 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
             .fillMaxSize()
             .background(RadioColors.Background),
     ) {
+        // Only the favorites tab has artwork behind it; every other tab stays plain.
+        AnimatedVisibility(visible = showFavorites, enter = fadeIn(tween(200)), exit = fadeOut(tween(200))) {
+            FavoritesBackdrop()
+        }
+
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             // Space for the player bar is always reserved, so the list never shifts when it appears.
@@ -310,30 +322,38 @@ private fun LazyListScope.stationGrid(
 }
 
 /**
- * Shown in the favorites tab before any station is starred: the 1920s radio
- * illustration with a short explanation of how to add a favorite.
+ * The 1920s radio illustration behind the favorites tab: it fills the screen,
+ * anchored to the bottom, under a dark scrim that keeps the text readable.
  */
+@Composable
+private fun FavoritesBackdrop() {
+    Box(Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.radio_1920s_bg),
+            // Decorative: announcing it on every visit to the tab would only be noise.
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            alignment = Alignment.BottomCenter,
+            modifier = Modifier.fillMaxSize(),
+        )
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = FAVORITES_SCRIM_ALPHA)),
+        )
+    }
+}
+
+/** Shown in the favorites tab before any station is starred: how to add a favorite. */
 @Composable
 private fun FavoritesEmptyState() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = ScreenPadding)
-            .padding(top = 24.dp),
+            .padding(top = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Image(
-            painter = painterResource(R.drawable.radio_1920s_bg),
-            contentDescription = stringResource(R.string.favorites_empty_image),
-            // The artwork is a tall backdrop; this frames the radio and its horn.
-            contentScale = ContentScale.Crop,
-            alignment = BiasAlignment(horizontalBias = 0f, verticalBias = 0.29f),
-            modifier = Modifier
-                .widthIn(max = 420.dp)
-                .fillMaxWidth()
-                .aspectRatio(4f / 3f)
-                .clip(RoundedCornerShape(16.dp)),
-        )
         Text(
             text = stringResource(R.string.favorites_empty_title),
             color = RadioColors.Text,
@@ -341,13 +361,12 @@ private fun FavoritesEmptyState() {
             fontFamily = SerifFamily,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
-            modifier = Modifier
-                .padding(top = 24.dp)
-                .semantics { heading() },
+            modifier = Modifier.semantics { heading() },
         )
         Text(
             text = stringResource(R.string.favorites_empty_message),
-            color = RadioColors.SecondaryText,
+            // Off-white rather than grey: it sits directly on the artwork.
+            color = RadioColors.Text,
             fontSize = 15.sp,
             lineHeight = 22.sp,
             textAlign = TextAlign.Center,

@@ -62,6 +62,7 @@ fun StationCard(
     onClick: () -> Unit,
     onToggleFavorite: () -> Unit,
     modifier: Modifier = Modifier,
+    subtitleColor: Color = RadioColors.SecondaryText,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
@@ -130,7 +131,7 @@ fun StationCard(
         )
         Text(
             text = subtitle,
-            color = RadioColors.SecondaryText,
+            color = subtitleColor,
             fontSize = 13.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
