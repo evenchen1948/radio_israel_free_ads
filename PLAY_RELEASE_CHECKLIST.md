@@ -105,8 +105,9 @@ Tested with the R8 release build on an Android 15 emulator. No crashes, no ANRs,
 ### Version, application ID and icon
 
 - `versionCode` is 1 and `versionName` is now `1.0.0`.
-- **Fixed: adaptive icon added** (there was none): three white equalizer bars on blue, with a
-  monochrome layer for themed icons.
+- **Adaptive icon:** a rabbit wearing headphones on near black (`#0A0A0C`), with a monochrome layer
+  for themed icons and legacy mipmaps. The layers are bitmaps generated from `design/img.png`, which
+  is also the 512x512 icon to upload to the Play Console listing.
 - `applicationId` and `namespace` are `io.github.evenchen1948.radioil`, as registered in Play
   Console. The ID is permanent once published.
 - The app name is "רדיו ישראל".
