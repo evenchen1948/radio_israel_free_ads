@@ -98,8 +98,9 @@ Tested with the R8 release build on an Android 15 emulator. No crashes, no ANRs,
 
 - **Fixed:** resuming an HLS station after a pause could fail with "behind live window". The player
   now rejoins the live broadcast automatically.
-- Not tested: swiping the app away from recents, and Android 17's background-audio restrictions on a
-  real device. See section 2.
+- Closing the app from recents (a swipe or "close all") now stops the radio and ends the playback
+  service. Built, but not yet tested on a device.
+- Not tested: Android 17's background-audio restrictions on a real device. See section 2.
 
 ### Version, application ID and icon
 

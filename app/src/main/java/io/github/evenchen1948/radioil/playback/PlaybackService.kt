@@ -8,7 +8,6 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.MimeTypes
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.LibraryResult
@@ -69,11 +68,9 @@ class PlaybackService : MediaLibraryService() {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession = session
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        // Swiping the app away keeps the radio playing; otherwise there is nothing to keep alive.
-        val player = session.player
-        if (!player.playWhenReady || player.mediaItemCount == 0 || player.playbackState == Player.STATE_IDLE) {
-            stopSelf()
-        }
+        // Closing the app from recents ("close all" or a swipe) ends the radio too:
+        // stop the stream, drop the notification and let the service be destroyed.
+        pauseAllPlayersAndStopSelf()
     }
 
     override fun onDestroy() {
