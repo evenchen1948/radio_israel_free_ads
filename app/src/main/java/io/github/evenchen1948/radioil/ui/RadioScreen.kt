@@ -73,10 +73,10 @@ private val CardSpacing = 12.dp
 
 /**
  * Black drawn over the favorites artwork so text on it keeps its contrast.
- * At this strength gold and off-white text reach 4.5:1 even on the brass horn;
- * grey text does not, so the favorites tab uses off-white for it instead.
+ * At this strength only off-white text reaches 4.5:1 on the brass horn, so
+ * the favorites tab draws its grey and gold text in off-white instead.
  */
-private const val FAVORITES_SCRIM_ALPHA = 0.72f
+private const val FAVORITES_SCRIM_ALPHA = 0.55f
 
 /** Order of the category chips and of the sections on the home screen. */
 private val CategoryOrder = listOf(
@@ -233,7 +233,10 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
                 }
             }
 
-            item(key = "privacy") { PrivacyPolicyLink() }
+            item(key = "privacy") {
+                // Gold is too faint over the favorites artwork.
+                PrivacyPolicyLink(color = if (showFavorites) RadioColors.Text else RadioColors.Gold)
+            }
         }
 
         // The bar keeps showing the last station while it slides away.
@@ -480,7 +483,7 @@ private fun SectionHeader(title: String, onShowAll: (() -> Unit)?) {
 
 /** Footer link that opens the privacy policy in the browser, as Google Play requires. */
 @Composable
-private fun PrivacyPolicyLink() {
+private fun PrivacyPolicyLink(color: Color) {
     val uriHandler = LocalUriHandler.current
     val url = stringResource(R.string.privacy_policy_url)
     Box(
@@ -502,7 +505,7 @@ private fun PrivacyPolicyLink() {
         ) {
             Text(
                 text = stringResource(R.string.action_privacy_policy),
-                color = RadioColors.Gold,
+                color = color,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
             )
