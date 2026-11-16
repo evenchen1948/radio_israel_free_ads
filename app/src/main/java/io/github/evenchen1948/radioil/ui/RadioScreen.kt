@@ -4,11 +4,13 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,6 +57,7 @@ import io.github.evenchen1948.radioil.data.StationCategory
 import io.github.evenchen1948.radioil.player.PlaybackStatus
 import io.github.evenchen1948.radioil.player.PlayerViewModel
 import io.github.evenchen1948.radioil.ui.theme.RadioColors
+import io.github.evenchen1948.radioil.ui.theme.SerifFamily
 import java.time.LocalTime
 
 private val ScreenPadding = 20.dp
@@ -83,6 +86,21 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
 
     // Back returns from a category to the full list; from the full list it leaves the app.
     BackHandler(enabled = filter != null) { filter = null }
+
+    // The expanded player closes first: the handler registered last wins.
+    var playerExpanded by rememberSaveable { mutableStateOf(false) }
+    val showPlayer = playerExpanded && state.current != null
+    BackHandler(enabled = showPlayer) { playerExpanded = false }
+
+    // Previous/next step through the stations in the order the home screen lists them.
+    val orderedStations = remember(state.stations) {
+        CategoryOrder.flatMap { category -> state.stations.filter { it.category == category } }
+    }
+
+    fun playNeighbour(offset: Int) {
+        val index = orderedStations.indexOf(state.current)
+        if (index >= 0) viewModel.play(orderedStations[(index + offset).mod(orderedStations.size)])
+    }
 
     @Composable
     fun Card(station: Station, modifier: Modifier) {
@@ -120,7 +138,8 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
                     text = stringResource(greetingRes()),
                     color = RadioColors.Text,
                     fontSize = 32.sp,
-                    fontWeight = FontWeight.Black,
+                    fontFamily = SerifFamily,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .padding(horizontal = ScreenPadding)
                         .semantics { heading() },
@@ -200,19 +219,46 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
                     statusText = stringResource(state.status.barLabelRes()),
                     isError = state.status == PlaybackStatus.ERROR,
                     isActive = isActive,
-                    playPauseLabel = stringResource(
-                        when {
-                            isActive -> R.string.action_pause
-                            state.status == PlaybackStatus.ERROR -> R.string.action_retry
-                            else -> R.string.action_play
-                        },
-                    ),
+                    playPauseLabel = playPauseLabel(state.status),
+                    expandLabel = stringResource(R.string.action_open_player),
                     onTogglePlayPause = viewModel::togglePlayPause,
+                    onExpand = { playerExpanded = true },
+                )
+            }
+        }
+
+        AnimatedVisibility(
+            visible = showPlayer,
+            enter = slideInVertically(tween(250)) { it } + fadeIn(tween(150)),
+            exit = slideOutVertically(tween(200)) { it } + fadeOut(tween(200)),
+        ) {
+            lastStation?.let { station ->
+                PlayerScreen(
+                    station = station,
+                    categoryText = stringResource(station.category.labelRes()),
+                    statusText = stringResource(state.status.barLabelRes()),
+                    isPlaying = state.status == PlaybackStatus.PLAYING,
+                    isError = state.status == PlaybackStatus.ERROR,
+                    isActive = isActive,
+                    playPauseLabel = playPauseLabel(state.status),
+                    onTogglePlayPause = viewModel::togglePlayPause,
+                    onPrevious = { playNeighbour(-1) },
+                    onNext = { playNeighbour(1) },
+                    onCollapse = { playerExpanded = false },
                 )
             }
         }
     }
 }
+
+@Composable
+private fun playPauseLabel(status: PlaybackStatus): String = stringResource(
+    when (status) {
+        PlaybackStatus.PLAYING, PlaybackStatus.LOADING -> R.string.action_pause
+        PlaybackStatus.ERROR -> R.string.action_retry
+        else -> R.string.action_play
+    },
+)
 
 /** Horizontally scrolling filter pills: "all" followed by one per category. */
 @Composable
@@ -245,7 +291,8 @@ private fun Chip(label: String, selected: Boolean, onClick: () -> Unit) {
         modifier = Modifier
             .heightIn(min = 48.dp)
             .clip(CircleShape)
-            .background(if (selected) RadioColors.Blue else RadioColors.Tile)
+            .background(if (selected) RadioColors.Gold else RadioColors.Surface)
+            .border(1.dp, if (selected) RadioColors.Gold else RadioColors.Outline, CircleShape)
             .clickable(role = Role.Tab, onClick = onClick)
             .semantics { this.selected = selected }
             .padding(horizontal = 20.dp),
@@ -253,7 +300,7 @@ private fun Chip(label: String, selected: Boolean, onClick: () -> Unit) {
     ) {
         Text(
             text = label,
-            color = if (selected) RadioColors.Background else RadioColors.Text,
+            color = if (selected) RadioColors.OnGold else RadioColors.Text,
             fontSize = 15.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
             maxLines = 1,
@@ -275,7 +322,8 @@ private fun SectionHeader(title: String, onShowAll: (() -> Unit)?) {
             text = title,
             color = RadioColors.Text,
             fontSize = 20.sp,
-            fontWeight = FontWeight.Black,
+            fontFamily = SerifFamily,
+                    fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .weight(1f)
                 .semantics { heading() },
@@ -291,7 +339,7 @@ private fun SectionHeader(title: String, onShowAll: (() -> Unit)?) {
             ) {
                 Text(
                     text = stringResource(R.string.action_show_all),
-                    color = RadioColors.Blue,
+                    color = RadioColors.Gold,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                 )
@@ -324,7 +372,7 @@ private fun PrivacyPolicyLink() {
         ) {
             Text(
                 text = stringResource(R.string.action_privacy_policy),
-                color = RadioColors.Blue,
+                color = RadioColors.Gold,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
             )

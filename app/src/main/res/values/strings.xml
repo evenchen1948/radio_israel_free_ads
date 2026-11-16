@@ -28,6 +28,11 @@
     <string name="action_play">נגן</string>
     <string name="action_pause">השהה</string>
     <string name="action_retry">נסו שוב</string>
+    <string name="action_previous">התחנה הקודמת</string>
+    <string name="action_next">התחנה הבאה</string>
+    <string name="action_open_player">פתח נגן</string>
+    <string name="action_collapse">סגור נגן</string>
+    <string name="volume_label">עוצמה</string>
 
     <string name="action_privacy_policy">מדיניות הפרטיות</string>
     <string name="privacy_policy_url" translatable="false">https://evenchen1948.github.io/arnav/privacy.html</string>

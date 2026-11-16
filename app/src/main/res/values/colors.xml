@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Matches RadioColors.Background so launch does not flash a different color. -->
-    <color name="window_background">#FFFFFF</color>
+    <color name="window_background">#0A0A0C</color>
     <color name="ic_launcher_background">#0077B5</color>
 </resources>

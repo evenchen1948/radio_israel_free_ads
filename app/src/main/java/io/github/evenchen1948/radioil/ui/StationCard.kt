@@ -10,6 +10,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -24,8 +25,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,24 +35,22 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.evenchen1948.radioil.data.Station
 import io.github.evenchen1948.radioil.ui.theme.RadioColors
+import io.github.evenchen1948.radioil.ui.theme.SerifFamily
 
 private val TileShape = RoundedCornerShape(16.dp)
 private val TileHeight = 116.dp
 
 /**
  * A station as a large rounded tile with its name and a subtitle underneath.
- * The tile shows the station name until logos are bundled.
+ * The tile is text only (see [tileLabel]); the playing station is outlined in gold.
  */
 @Composable
 fun StationCard(
@@ -88,21 +85,17 @@ fun StationCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(TileHeight)
-                .background(if (isCurrent) RadioColors.BlueTint else RadioColors.Tile, TileShape)
+                .background(RadioColors.Surface, TileShape)
+                .border(1.dp, if (isCurrent) RadioColors.Gold else RadioColors.Outline, TileShape)
                 .padding(12.dp),
             contentAlignment = Alignment.Center,
         ) {
-            // Decorative: the same name is read from the text below the tile.
-            BasicText(
-                text = station.name,
-                style = TextStyle(
-                    color = if (isCurrent) RadioColors.BlueOnTint else RadioColors.Text,
-                    fontWeight = FontWeight.Black,
-                    textAlign = TextAlign.Center,
-                ),
-                maxLines = 2,
-                autoSize = TextAutoSize.StepBased(minFontSize = 13.sp, maxFontSize = 24.sp, stepSize = 1.sp),
-                modifier = Modifier.clearAndSetSemantics { },
+            StationTileLabel(
+                station = station,
+                mainColor = if (isCurrent) RadioColors.Gold else RadioColors.Text,
+                maxMainSize = 44.sp,
+                captionSize = 11.sp,
+                captionGap = 2.dp,
             )
             if (isCurrent) {
                 Equalizer(
@@ -115,8 +108,9 @@ fun StationCard(
         Text(
             text = station.name,
             color = RadioColors.Text,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Bold,
+            fontSize = 17.sp,
+            fontFamily = SerifFamily,
+            fontWeight = FontWeight.Medium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 10.dp),
@@ -136,7 +130,7 @@ private val EqualizerRestingHeights = listOf(0.55f, 1f, 0.4f)
 
 /** Three small bars that bounce while the station is playing and rest otherwise. */
 @Composable
-private fun Equalizer(animate: Boolean, modifier: Modifier = Modifier, color: Color = RadioColors.BlueOnTint) {
+private fun Equalizer(animate: Boolean, modifier: Modifier = Modifier, color: Color = RadioColors.Gold) {
     val heights = if (animate) animatedBarHeights() else EqualizerRestingHeights
 
     Row(

@@ -1,44 +1,64 @@
 package io.github.evenchen1948.radioil.ui.theme
 
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
+import androidx.compose.ui.text.font.FontWeight
+import io.github.evenchen1948.radioil.R
 
-/** Palette sampled from the home screen design in design/1.png. */
+/** Palette sampled from the player design in design/2.png. */
 object RadioColors {
-    val Background = Color(0xFFFFFFFF)
+    val Background = Color(0xFF0A0A0C)
 
-    /** The single accent: selected chip, links, the playing station, the play button. */
-    val Blue = Color(0xFF0077B5)
+    /** Tiles, discs and the player bar: one step lighter than the background. */
+    val Surface = Color(0xFF16161A)
 
-    /** Tile behind the playing station. */
-    val BlueTint = Color(0xFFE1F1FA)
+    /** Hairline around surfaces and round buttons. */
+    val Outline = Color(0xFF2A2A2E)
 
-    /** Text and marks drawn on [BlueTint]; plain [Blue] is below 4.5:1 contrast there. */
-    val BlueOnTint = Color(0xFF005F91)
+    /** The single accent: play button, active station, live indicator, selected chip, links. */
+    val Gold = Color(0xFFC8A96A)
 
-    /** Neutral tiles and unselected chips. */
-    val Tile = Color(0xFFF3F5F7)
+    /** Marks and text drawn on [Gold]. */
+    val OnGold = Color(0xFF0A0A0C)
 
-    val Text = Color(0xFF1F2024)
-    val SecondaryText = Color(0xFF6F7278)
-    val Error = Color(0xFFC62828)
+    /** Unfilled part of the volume slider. */
+    val Track = Color(0xFF3A3A3C)
+
+    val Text = Color(0xFFF2EEE6)
+    val SecondaryText = Color(0xFF8E8E93)
+    val Error = Color(0xFFEF8A80)
 }
 
-private val RadioColorScheme = lightColorScheme(
-    primary = RadioColors.Blue,
-    onPrimary = Color.White,
+/** Frank Ruhl Libre (variable font): greeting, section titles, station names and tile labels. */
+val SerifFamily = FontFamily(
+    listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.Bold).map { weight ->
+        Font(
+            resId = R.font.frank_ruhl_libre,
+            weight = weight,
+            variationSettings = FontVariation.Settings(FontVariation.weight(weight.weight)),
+        )
+    },
+)
+
+private val RadioColorScheme = darkColorScheme(
+    primary = RadioColors.Gold,
+    onPrimary = RadioColors.OnGold,
     background = RadioColors.Background,
     onBackground = RadioColors.Text,
     surface = RadioColors.Background,
     onSurface = RadioColors.Text,
-    surfaceVariant = RadioColors.Tile,
+    surfaceVariant = RadioColors.Surface,
     onSurfaceVariant = RadioColors.SecondaryText,
+    outline = RadioColors.Outline,
     error = RadioColors.Error,
 )
 
-/** Fixed app theme; dynamic color is deliberately not used. */
+/** Fixed dark app theme; dynamic color is deliberately not used. */
 @Composable
 fun RadioTheme(content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = RadioColorScheme, content = content)
