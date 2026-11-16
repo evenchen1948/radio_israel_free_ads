@@ -57,8 +57,10 @@ re-check the linked pages before each release.
 ### 64-bit and 16 KB page size
 
 - **Requirement:** apps targeting Android 15+ must support 16 KB pages on 64-bit devices.
-- **Status: passes.** The only native library is AndroidX's `libandroidx.graphics.path.so`, shipped for
-  `arm64-v8a`, `x86_64`, `armeabi-v7a` and `x86`, so 64-bit is covered.
+- **Status: passes.** The native libraries are AndroidX's `libandroidx.graphics.path.so` and, since
+  favorites were added in 1.1.0, DataStore's `libdatastore_shared_counter.so`. Both ship for
+  `arm64-v8a`, `x86_64`, `armeabi-v7a` and `x86`, so 64-bit is covered. In the 1.1.0 AAB every copy
+  of both has 16 KB (`0x4000`) LOAD alignment.
 - Verified on the release APK and AAB: every library has 16 KB (`0x4000`) LOAD alignment, its RELRO
   layout is safe on 16 KB pages, and `zipalign -c -P 16` reports "Verification successful".
 - Not done: a run on a real 16 KB device or emulator image.
@@ -104,7 +106,7 @@ Tested with the R8 release build on an Android 15 emulator. No crashes, no ANRs,
 
 ### Version, application ID and icon
 
-- `versionCode` is 1 and `versionName` is now `1.0.0`.
+- `versionCode` is 2 and `versionName` is `1.1.0`. Version 1 (`1.0.0`) is on the internal testing track.
 - **Adaptive icon:** a rabbit wearing headphones on near black (`#0A0A0C`), with a monochrome layer
   for themed icons and legacy mipmaps. The layers are bitmaps generated from `design/img.png`, which
   is also the 512x512 icon to upload to the Play Console listing.
