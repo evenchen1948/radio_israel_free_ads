@@ -20,6 +20,23 @@
     <string name="action_remove_favorite">הסר מהמועדפים</string>
     <string name="favorites_empty_title">עדיין אין מועדפים</string>
     <string name="favorites_empty_message">כדי להוסיף תחנה למועדפים, הקישו על הכוכב שבפינת התחנה</string>
+    <!-- The picker for what is shown behind the favorites tab: its button, its title, then the choices. -->
+    <string name="action_change_background">החלפת רקע</string>
+    <string name="background_picker_title">בחרו רקע</string>
+    <string name="background_none">ללא</string>
+    <string name="background_1920s">שנות ה-20</string>
+    <string name="background_1930s">שנות ה-30</string>
+    <string name="background_1940s">שנות ה-40</string>
+    <string name="background_1950s">שנות ה-50</string>
+    <string name="background_1960s">שנות ה-60</string>
+    <string name="background_1970s">שנות ה-70</string>
+    <string name="background_1980s">שנות ה-80</string>
+    <!-- Switch in the picker: show the illustration under a lighter scrim. -->
+    <string name="background_brighter">רקע בהיר יותר</string>
+    <!-- Spoken names of the choices: no artwork, a decade's artwork (%1$s is its label), and the current choice. -->
+    <string name="background_none_description">ללא רקע</string>
+    <string name="background_description">רקע %1$s</string>
+    <string name="background_selected">%1$s, נבחר</string>
     <!-- Card subtitle for the current station: category, then playback status. -->
     <string name="card_subtitle_current">%1$s • %2$s</string>
 

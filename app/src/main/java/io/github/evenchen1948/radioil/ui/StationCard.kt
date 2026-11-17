@@ -32,13 +32,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.evenchen1948.radioil.data.Station
@@ -46,6 +51,9 @@ import io.github.evenchen1948.radioil.ui.theme.RadioColors
 import io.github.evenchen1948.radioil.ui.theme.SerifFamily
 
 private val TileShape = RoundedCornerShape(16.dp)
+
+/** The whole card: the tile's corners at the top, the text plate's at the bottom. */
+private val CardShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 12.dp, bottomEnd = 12.dp)
 private val TileHeight = 116.dp
 
 /**
@@ -63,6 +71,8 @@ fun StationCard(
     onToggleFavorite: () -> Unit,
     modifier: Modifier = Modifier,
     subtitleColor: Color = RadioColors.SecondaryText,
+    /** 0 to 1: how far the dark plate behind the name and subtitle is faded in. */
+    plateFraction: Float = 0f,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
@@ -75,7 +85,7 @@ fun StationCard(
     Column(
         modifier = modifier
             .scale(pressScale)
-            .clip(TileShape)
+            .clip(CardShape)
             .clickable(
                 interactionSource = interactionSource,
                 indication = LocalIndication.current,
@@ -119,26 +129,55 @@ fun StationCard(
             )
         }
 
-        Text(
-            text = station.name,
-            color = RadioColors.Text,
-            fontSize = 17.sp,
-            fontFamily = SerifFamily,
-            fontWeight = FontWeight.Medium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 10.dp),
-        )
-        Text(
-            text = subtitle,
-            color = subtitleColor,
-            fontSize = 13.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 2.dp, bottom = 4.dp),
-        )
+        Column(
+            modifier = Modifier
+                .padding(top = 6.dp)
+                .fillMaxWidth()
+                .textPlate(plateFraction)
+                // The text moves in from the plate's edge only as far as the plate is shown.
+                .padding(horizontal = 8.dp * plateFraction, vertical = 4.dp),
+        ) {
+            Text(
+                text = station.name,
+                color = RadioColors.Text,
+                fontSize = 17.sp,
+                fontFamily = SerifFamily,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = subtitle,
+                color = subtitleColor,
+                fontSize = 13.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+        }
     }
 }
+
+/** How strongly the plate behind text on bright artwork covers what is under it. */
+private const val TEXT_PLATE_ALPHA = 0.6f
+
+/**
+ * A translucent dark plate with rounded corners behind text that sits on the
+ * brighter favorites artwork. [fraction] fades it in (1) and out (0). The plate
+ * reaches [horizontal] and [vertical] beyond the text without changing the layout.
+ */
+internal fun Modifier.textPlate(fraction: Float, horizontal: Dp = 0.dp, vertical: Dp = 0.dp): Modifier =
+    drawBehind {
+        if (fraction <= 0f) return@drawBehind
+        val dx = horizontal.toPx()
+        val dy = vertical.toPx()
+        drawRoundRect(
+            color = RadioColors.Background.copy(alpha = TEXT_PLATE_ALPHA * fraction),
+            topLeft = Offset(-dx, -dy),
+            size = Size(size.width + 2 * dx, size.height + 2 * dy),
+            cornerRadius = CornerRadius(12.dp.toPx()),
+        )
+    }
 
 private val EqualizerRestingHeights = listOf(0.55f, 1f, 0.4f)
 

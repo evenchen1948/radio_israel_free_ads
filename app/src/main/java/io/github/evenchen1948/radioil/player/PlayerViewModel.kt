@@ -9,7 +9,9 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import io.github.evenchen1948.radioil.data.FavoritesBackground
 import io.github.evenchen1948.radioil.data.FavoritesRepository
+import io.github.evenchen1948.radioil.data.SettingsRepository
 import io.github.evenchen1948.radioil.data.Station
 import io.github.evenchen1948.radioil.data.StationRepository
 import io.github.evenchen1948.radioil.playback.PlaybackService
@@ -27,6 +29,10 @@ data class PlayerUiState(
     val status: PlaybackStatus = PlaybackStatus.IDLE,
     /** Ids of the starred stations; null until they have been read from storage. */
     val favoriteIds: Set<String>? = null,
+    /** The artwork behind the favorites tab; null until the choice has been read from storage. */
+    val favoritesBackground: FavoritesBackground? = null,
+    /** Whether the artwork is shown under the lighter scrim. */
+    val favoritesBackgroundBright: Boolean = false,
 )
 
 /**
@@ -40,6 +46,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val stations = StationRepository(application).loadStations()
     private val stationsById = stations.associateBy { it.id }
     private val favorites = FavoritesRepository(application)
+    private val settings = SettingsRepository(application)
 
     private val _uiState = MutableStateFlow(PlayerUiState(stations = stations))
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
@@ -61,6 +68,16 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     init {
         viewModelScope.launch {
             favorites.favoriteIds.collect { ids -> _uiState.update { it.copy(favoriteIds = ids) } }
+        }
+        viewModelScope.launch {
+            settings.favoritesBackground.collect { background ->
+                _uiState.update { it.copy(favoritesBackground = background) }
+            }
+        }
+        viewModelScope.launch {
+            settings.favoritesBackgroundBright.collect { bright ->
+                _uiState.update { it.copy(favoritesBackgroundBright = bright) }
+            }
         }
         controllerFuture.addListener(
             {
@@ -102,6 +119,14 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             // The service reconnects to the live stream on play, including after an error.
             else -> controller.play()
         }
+    }
+
+    fun setFavoritesBackground(background: FavoritesBackground) {
+        viewModelScope.launch { settings.setFavoritesBackground(background) }
+    }
+
+    fun setFavoritesBackgroundBright(bright: Boolean) {
+        viewModelScope.launch { settings.setFavoritesBackgroundBright(bright) }
     }
 
     fun toggleFavorite(station: Station) {

@@ -238,18 +238,20 @@ private fun StatusLabel(text: String, isPlaying: Boolean, isError: Boolean) {
     }
 }
 
-/** A 48dp circle with a hairline outline and a glyph drawn in [draw]. */
+/** A 48dp circle with a hairline outline, an optional [fill] and a glyph drawn in [draw]. */
 @Composable
-private fun OutlinedRoundButton(
+internal fun OutlinedRoundButton(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    fill: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Transparent,
     draw: androidx.compose.ui.graphics.drawscope.DrawScope.() -> Unit,
 ) {
     Canvas(
         modifier = modifier
             .size(48.dp)
             .clip(CircleShape)
+            .background(fill)
             .border(1.dp, RadioColors.Outline, CircleShape)
             .clickable(role = Role.Button, onClickLabel = label, onClick = onClick)
             .semantics { contentDescription = label },
