@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import io.github.evenchen1948.radioil.data.Station
 import io.github.evenchen1948.radioil.ui.theme.RadioColors
 import io.github.evenchen1948.radioil.ui.theme.SerifFamily
+import io.github.evenchen1948.radioil.ui.theme.surfaceShadow
 
 /** Height the bar occupies, used to reserve space under the list so nothing shifts when it appears. */
 val PlayerBarHeight = 72.dp
@@ -60,6 +61,7 @@ fun PlayerBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .surfaceShadow(BarShape)
             .clip(BarShape)
             .background(RadioColors.Surface)
             .border(1.dp, RadioColors.Outline, BarShape)
@@ -79,7 +81,7 @@ fun PlayerBar(
             val label = station.tileLabel()
             Text(
                 text = if (label.caption != null) label.main else label.main.trim().take(1),
-                color = RadioColors.Gold,
+                color = RadioColors.GoldText,
                 fontSize = if (label.main.length > 3) 13.sp else 17.sp,
                 fontFamily = SerifFamily,
                 fontWeight = FontWeight.Bold,

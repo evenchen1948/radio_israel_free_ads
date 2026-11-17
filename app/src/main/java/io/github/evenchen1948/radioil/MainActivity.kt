@@ -13,8 +13,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.evenchen1948.radioil.player.PlayerViewModel
 import io.github.evenchen1948.radioil.ui.RadioScreen
 import io.github.evenchen1948.radioil.ui.theme.RadioTheme
 
@@ -26,7 +30,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // The app is always dark, so the system bar icons are always light.
+        // Transparent bars. Their icons start light and then follow the theme (see SystemBarIcons).
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
@@ -35,9 +39,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             // The app is Hebrew-only, so the layout is RTL whatever the device language.
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                RadioTheme {
-                    Surface(color = MaterialTheme.colorScheme.background) {
-                        RadioScreen()
+                val viewModel: PlayerViewModel = viewModel()
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+                // Nothing is drawn until the saved theme is known, so a silver
+                // launch never shows the dark theme first.
+                state.theme?.let { theme ->
+                    RadioTheme(theme) {
+                        Surface(color = MaterialTheme.colorScheme.background) {
+                            RadioScreen(viewModel)
+                        }
                     }
                 }
             }

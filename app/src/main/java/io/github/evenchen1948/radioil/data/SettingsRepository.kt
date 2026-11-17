@@ -1,7 +1,6 @@
 package io.github.evenchen1948.radioil.data
 
 import android.content.Context
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -13,36 +12,35 @@ import java.io.IOException
 
 private val Context.settingsStore by preferencesDataStore(name = "settings")
 private val FavoritesBackgroundId = stringPreferencesKey("favorites_background")
-private val FavoritesBackgroundBright = booleanPreferencesKey("favorites_background_bright")
+private val ThemeId = stringPreferencesKey("theme")
 
 /** The user's display choices, kept on the device only. */
 class SettingsRepository(context: Context) {
 
     private val store = context.applicationContext.settingsStore
 
-    val favoritesBackground: Flow<FavoritesBackground> = store.data
-        // An unreadable file means the default background, not a crash.
+    // An unreadable file means the defaults, not a crash.
+    private val preferences = store.data
         .catch { error -> if (error is IOException) emit(emptyPreferences()) else throw error }
-        .map { preferences -> FavoritesBackground.fromId(preferences[FavoritesBackgroundId]) }
 
-    /** Whether the chosen illustration is shown under the lighter scrim. */
-    val favoritesBackgroundBright: Flow<Boolean> = store.data
-        .catch { error -> if (error is IOException) emit(emptyPreferences()) else throw error }
-        .map { preferences -> preferences[FavoritesBackgroundBright] ?: false }
+    val favoritesBackground: Flow<FavoritesBackground> =
+        preferences.map { FavoritesBackground.fromId(it[FavoritesBackgroundId]) }
+
+    val theme: Flow<AppTheme> = preferences.map { AppTheme.fromId(it[ThemeId]) }
 
     suspend fun setFavoritesBackground(background: FavoritesBackground) {
         try {
-            store.edit { preferences -> preferences[FavoritesBackgroundId] = background.id }
+            store.edit { it[FavoritesBackgroundId] = background.id }
         } catch (_: IOException) {
             // The background simply stays as it was.
         }
     }
 
-    suspend fun setFavoritesBackgroundBright(bright: Boolean) {
+    suspend fun setTheme(theme: AppTheme) {
         try {
-            store.edit { preferences -> preferences[FavoritesBackgroundBright] = bright }
+            store.edit { it[ThemeId] = theme.id }
         } catch (_: IOException) {
-            // The brightness simply stays as it was.
+            // The theme simply stays as it was.
         }
     }
 }

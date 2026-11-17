@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Matches RadioColors.Background so launch does not flash a different color. -->
+    <!-- The dark theme's background: launch is dark until the saved theme has been read. -->
     <color name="window_background">#0A0A0C</color>
     <color name="ic_launcher_background">#0A0A0C</color>
 </resources>

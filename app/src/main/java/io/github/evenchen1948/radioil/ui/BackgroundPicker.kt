@@ -3,7 +3,6 @@ package io.github.evenchen1948.radioil.ui
 import android.content.res.Resources
 import android.graphics.BitmapFactory
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -13,6 +12,7 @@ import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,20 +21,17 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -44,9 +41,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
@@ -68,9 +65,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.evenchen1948.radioil.R
+import io.github.evenchen1948.radioil.data.AppTheme
 import io.github.evenchen1948.radioil.data.FavoritesBackground
 import io.github.evenchen1948.radioil.ui.theme.RadioColors
+import io.github.evenchen1948.radioil.ui.theme.RadioPalette
 import io.github.evenchen1948.radioil.ui.theme.SerifFamily
+import io.github.evenchen1948.radioil.ui.theme.paletteOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -78,15 +78,16 @@ private val CardWidth = 120.dp
 
 /**
  * Width over height of a card. Much shorter than the illustrations, so the
- * sheet leaves the upper half of the tab, and the change behind it, in view.
+ * sheet leaves the upper part of the tab, and the change behind it, in view.
  */
 private const val CARD_ASPECT_RATIO = 3f / 4f
 
 /** Crops to the lower part of an illustration, where the radio stands, with a little floor under it. */
 private val CardImageAlignment = BiasAlignment(horizontalBias = 0f, verticalBias = 0.6f)
 private val CardShape = RoundedCornerShape(14.dp)
+private val ThemeTileHeight = 76.dp
 
-/** The round button on the favorites tab that opens the background picker. */
+/** The round button on the favorites tab that opens the picker. */
 @Composable
 fun ChangeBackgroundButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     OutlinedRoundButton(
@@ -124,18 +125,20 @@ private fun DrawScope.drawPictureIcon() {
 }
 
 /**
- * Bottom sheet with one preview card per background. A tap applies the choice
- * at once and the sheet stays open, so several can be tried against the real
- * tab; for the same reason the sheet does not dim what is behind it. A switch
- * under the cards shows the chosen illustration under a lighter scrim.
+ * Bottom sheet for how the app looks: two tiles for the color theme, then one
+ * preview card per favorites background. A tap applies the choice at once and
+ * the sheet stays open, so several can be tried against the real screen; for
+ * the same reason the sheet does not dim what is behind it.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BackgroundPickerSheet(
+    theme: AppTheme,
     selected: FavoritesBackground?,
-    bright: Boolean,
+    /** Whether the screen behind the sheet needs dark status bar icons. */
+    darkStatusBarIcons: Boolean,
+    onThemeChange: (AppTheme) -> Unit,
     onSelect: (FavoritesBackground) -> Unit,
-    onBrightChange: (Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val listState = rememberLazyListState(
@@ -149,22 +152,36 @@ fun BackgroundPickerSheet(
         contentColor = RadioColors.Text,
         // Still catches the tap outside that closes the sheet.
         scrimColor = Color.Transparent,
+        // The sheet is its own window: its bar icons follow the screen behind the
+        // status bar and the sheet's own surface behind the navigation bar.
+        properties = ModalBottomSheetProperties(
+            isAppearanceLightStatusBars = darkStatusBarIcons,
+            isAppearanceLightNavigationBars = theme == AppTheme.SILVER,
+        ),
     ) {
-        Text(
-            text = stringResource(R.string.background_picker_title),
-            color = RadioColors.Text,
-            fontSize = 20.sp,
-            fontFamily = SerifFamily,
-            fontWeight = FontWeight.Bold,
+        SheetHeading(stringResource(R.string.theme_setting))
+        Row(
             modifier = Modifier
-                .padding(horizontal = 20.dp)
-                .semantics { heading() },
-        )
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            AppTheme.entries.forEach { option ->
+                ThemeTile(
+                    theme = option,
+                    selected = option == theme,
+                    onClick = { onThemeChange(option) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+
+        SheetHeading(stringResource(R.string.background_picker_title))
         LazyRow(
             state = listState,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp, bottom = 16.dp),
+                .padding(top = 12.dp, bottom = 8.dp),
             contentPadding = PaddingValues(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             flingBehavior = rememberSnapFlingBehavior(listState, SnapPosition.Start),
@@ -177,45 +194,73 @@ fun BackgroundPickerSheet(
                 )
             }
         }
-        // Brightness only means something while there is an illustration to brighten.
-        AnimatedVisibility(visible = selected?.imageRes != null) {
-            BrightnessSwitch(checked = bright, onCheckedChange = onBrightChange)
-        }
         Spacer(Modifier.height(8.dp))
     }
 }
 
-/** A full-width row that toggles as one control: the label, then the switch. */
 @Composable
-private fun BrightnessSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(
+private fun SheetHeading(text: String) {
+    Text(
+        text = text,
+        color = RadioColors.Text,
+        fontSize = 20.sp,
+        fontFamily = SerifFamily,
+        fontWeight = FontWeight.Bold,
         modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 56.dp)
-            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
-            .padding(horizontal = 20.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(horizontal = 20.dp)
+            .semantics { heading() },
+    )
+}
+
+/** A miniature of a theme, in that theme's own colors whichever theme is active. */
+@Composable
+private fun ThemeTile(theme: AppTheme, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val label = stringResource(theme.labelRes)
+    val name = stringResource(R.string.theme_description, label)
+    val palette = paletteOf(theme)
+    ChoiceColumn(
+        label = label,
+        description = if (selected) stringResource(R.string.choice_selected, name) else name,
+        selected = selected,
+        onClick = onClick,
+        modifier = modifier,
     ) {
-        Text(
-            text = stringResource(R.string.background_brighter),
-            color = RadioColors.Text,
-            fontSize = 16.sp,
-            modifier = Modifier.weight(1f),
-        )
-        Switch(
-            checked = checked,
-            // The row handles the tap, so the row and the switch are one target.
-            onCheckedChange = null,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = RadioColors.OnGold,
-                checkedTrackColor = RadioColors.Gold,
-                checkedBorderColor = RadioColors.Gold,
-                uncheckedThumbColor = RadioColors.SecondaryText,
-                uncheckedTrackColor = RadioColors.Background,
-                uncheckedBorderColor = RadioColors.SecondaryText,
-            ),
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(ThemeTileHeight)
+                .clip(CardShape)
+                .background(palette.backgroundBrush),
+            contentAlignment = Alignment.Center,
+        ) {
+            Canvas(Modifier.size(width = 96.dp, height = 44.dp)) { drawThemeSample(palette) }
+            ChoiceFrame(selected)
+        }
     }
+}
+
+/** A small player bar in the given colors: a surface with two lines of text and a gold play button. */
+private fun DrawScope.drawThemeSample(palette: RadioPalette) {
+    val corner = CornerRadius(size.height / 2)
+    drawRoundRect(palette.surface, cornerRadius = corner)
+    drawRoundRect(palette.outline, cornerRadius = corner, style = Stroke(width = 1.dp.toPx()))
+    val buttonRadius = size.height * 0.3f
+    // Drawn left to right: this is a picture of the bar, not a mirrored layout.
+    drawCircle(palette.gold, radius = buttonRadius, center = Offset(size.height / 2, center.y))
+    val textLeft = size.height
+    val line = 3.dp.toPx()
+    drawRoundRect(
+        color = palette.text,
+        topLeft = Offset(textLeft, center.y - line * 1.6f),
+        size = Size(size.width * 0.42f, line),
+        cornerRadius = CornerRadius(line / 2),
+    )
+    drawRoundRect(
+        color = palette.secondaryText,
+        topLeft = Offset(textLeft, center.y + line * 0.6f),
+        size = Size(size.width * 0.28f, line),
+        cornerRadius = CornerRadius(line / 2),
+    )
 }
 
 @Composable
@@ -226,15 +271,12 @@ private fun BackgroundCard(background: FavoritesBackground, selected: Boolean, o
     } else {
         stringResource(R.string.background_description, label)
     }
-    val description = if (selected) stringResource(R.string.background_selected, name) else name
-
-    Column(
-        modifier = Modifier
-            .width(CardWidth)
-            .clip(CardShape)
-            .clickable(role = Role.Button, onClick = onClick)
-            .semantics { contentDescription = description },
-        horizontalAlignment = Alignment.CenterHorizontally,
+    ChoiceColumn(
+        label = label,
+        description = if (selected) stringResource(R.string.choice_selected, name) else name,
+        selected = selected,
+        onClick = onClick,
+        modifier = Modifier.width(CardWidth),
     ) {
         Box(
             modifier = Modifier
@@ -242,7 +284,7 @@ private fun BackgroundCard(background: FavoritesBackground, selected: Boolean, o
                 .aspectRatio(CARD_ASPECT_RATIO)
                 .clip(CardShape)
                 // The "none" card, and every card until its preview has been decoded.
-                .background(RadioColors.Background),
+                .background(RadioColors.BackgroundBrush),
         ) {
             background.imageRes?.let { imageRes ->
                 rememberPreview(imageRes)?.let { preview ->
@@ -256,37 +298,66 @@ private fun BackgroundCard(background: FavoritesBackground, selected: Boolean, o
                     )
                 }
             }
-            // Drawn over the picture so the outline is never hidden by it.
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .border(
-                        width = if (selected) 2.dp else 1.dp,
-                        color = if (selected) RadioColors.Gold else RadioColors.Outline,
-                        shape = CardShape,
-                    ),
-            )
-            if (selected) {
-                Canvas(
-                    Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                        .size(24.dp)
-                        .background(RadioColors.Gold, CircleShape),
-                ) { drawCheckMark() }
-            }
+            ChoiceFrame(selected)
         }
+    }
+}
+
+/**
+ * One choice in the sheet: its [preview] with the label underneath. The whole
+ * column is a single button, announced as [description].
+ */
+@Composable
+private fun ChoiceColumn(
+    label: String,
+    description: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    preview: @Composable () -> Unit,
+) {
+    Column(
+        modifier = modifier
+            .clip(CardShape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = description },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        preview()
         Text(
             text = label,
-            color = if (selected) RadioColors.Gold else RadioColors.Text,
+            color = if (selected) RadioColors.GoldText else RadioColors.Text,
             fontSize = 14.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
             maxLines = 1,
             modifier = Modifier
                 .padding(vertical = 10.dp)
-                // Already part of the card's description.
+                // Already part of the description.
                 .clearAndSetSemantics {},
         )
+    }
+}
+
+/** The outline of a preview, drawn over it so the picture never hides it, and the check mark of the current choice. */
+@Composable
+private fun BoxScope.ChoiceFrame(selected: Boolean) {
+    Box(
+        Modifier
+            .matchParentSize()
+            .border(
+                width = if (selected) 2.dp else 1.dp,
+                color = if (selected) RadioColors.GoldText else RadioColors.Outline,
+                shape = CardShape,
+            ),
+    )
+    if (selected) {
+        Canvas(
+            Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+                .size(24.dp)
+                .background(RadioColors.Gold, CircleShape),
+        ) { drawCheckMark() }
     }
 }
 

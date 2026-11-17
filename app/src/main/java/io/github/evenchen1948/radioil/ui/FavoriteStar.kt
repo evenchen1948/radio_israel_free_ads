@@ -61,7 +61,7 @@ internal fun DrawScope.drawStar(filled: Boolean, radius: Float = size.minDimensi
         if (point == 0) path.moveTo(x, y) else path.lineTo(x, y)
     }
     path.close()
-    val color = if (filled) RadioColors.Gold else RadioColors.SecondaryText
+    val color = if (filled) RadioColors.GoldText else RadioColors.SecondaryText
     if (filled) drawPath(path, color)
     drawPath(path, color, style = Stroke(width = 1.5.dp.toPx(), join = StrokeJoin.Round))
 }

@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import io.github.evenchen1948.radioil.data.Station
 import io.github.evenchen1948.radioil.ui.theme.RadioColors
 import io.github.evenchen1948.radioil.ui.theme.SerifFamily
+import io.github.evenchen1948.radioil.ui.theme.surfaceShadow
 
 private val TileShape = RoundedCornerShape(16.dp)
 
@@ -70,7 +71,8 @@ fun StationCard(
     onClick: () -> Unit,
     onToggleFavorite: () -> Unit,
     modifier: Modifier = Modifier,
-    subtitleColor: Color = RadioColors.SecondaryText,
+    /** Whether the name and subtitle sit on the favorites artwork, which is dark in both themes. */
+    onArtwork: Boolean = false,
     /** 0 to 1: how far the dark plate behind the name and subtitle is faded in. */
     plateFraction: Float = 0f,
 ) {
@@ -82,88 +84,97 @@ fun StationCard(
         label = "cardPress",
     )
 
-    Column(
-        modifier = modifier
-            .scale(pressScale)
-            .clip(CardShape)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = LocalIndication.current,
-                role = Role.Button,
-                onClick = onClick,
-            )
-            .semantics(mergeDescendants = true) { selected = isCurrent },
-    ) {
+    Box(modifier.scale(pressScale)) {
+        // The shadow is a sibling of the card: the card clips itself to its shape.
         Box(
-            modifier = Modifier
+            Modifier
                 .fillMaxWidth()
                 .height(TileHeight)
-                .background(RadioColors.Surface, TileShape)
-                .border(1.dp, if (isCurrent) RadioColors.Gold else RadioColors.Outline, TileShape),
+                .surfaceShadow(TileShape),
+        )
+        Column(
+            modifier = Modifier
+                .clip(CardShape)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = LocalIndication.current,
+                    role = Role.Button,
+                    onClick = onClick,
+                )
+                .semantics(mergeDescendants = true) { selected = isCurrent },
         ) {
             Box(
                 modifier = Modifier
-                    .matchParentSize()
-                    .padding(12.dp),
-                contentAlignment = Alignment.Center,
+                    .fillMaxWidth()
+                    .height(TileHeight)
+                    .background(RadioColors.Surface, TileShape)
+                    .border(1.dp, if (isCurrent) RadioColors.GoldText else RadioColors.Outline, TileShape),
             ) {
-                StationTileLabel(
-                    station = station,
-                    mainColor = if (isCurrent) RadioColors.Gold else RadioColors.Text,
-                    maxMainSize = 44.sp,
-                    captionSize = 11.sp,
-                    captionGap = 2.dp,
-                )
-                if (isCurrent) {
-                    Equalizer(
-                        animate = isPlaying,
-                        modifier = Modifier.align(Alignment.BottomStart),
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .padding(12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    StationTileLabel(
+                        station = station,
+                        mainColor = if (isCurrent) RadioColors.GoldText else RadioColors.Text,
+                        maxMainSize = 44.sp,
+                        captionSize = 11.sp,
+                        captionGap = 2.dp,
                     )
+                    if (isCurrent) {
+                        Equalizer(
+                            animate = isPlaying,
+                            modifier = Modifier.align(Alignment.BottomStart),
+                        )
+                    }
                 }
+                // Its own control: a tap here stars the station without playing it.
+                FavoriteToggle(
+                    isFavorite = isFavorite,
+                    onToggle = onToggleFavorite,
+                    modifier = Modifier.align(Alignment.TopEnd),
+                )
             }
-            // Its own control: a tap here stars the station without playing it.
-            FavoriteToggle(
-                isFavorite = isFavorite,
-                onToggle = onToggleFavorite,
-                modifier = Modifier.align(Alignment.TopEnd),
-            )
-        }
 
-        Column(
-            modifier = Modifier
-                .padding(top = 6.dp)
-                .fillMaxWidth()
-                .textPlate(plateFraction)
-                // The text moves in from the plate's edge only as far as the plate is shown.
-                .padding(horizontal = 8.dp * plateFraction, vertical = 4.dp),
-        ) {
-            Text(
-                text = station.name,
-                color = RadioColors.Text,
-                fontSize = 17.sp,
-                fontFamily = SerifFamily,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = subtitle,
-                color = subtitleColor,
-                fontSize = 13.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 2.dp),
-            )
+            Column(
+                modifier = Modifier
+                    .padding(top = 6.dp)
+                    .fillMaxWidth()
+                    .textPlate(plateFraction)
+                    // The text moves in from the plate's edge only as far as the plate is shown.
+                    .padding(horizontal = 8.dp * plateFraction, vertical = 4.dp),
+            ) {
+                Text(
+                    text = station.name,
+                    color = if (onArtwork) RadioColors.OnArtwork else RadioColors.Text,
+                    fontSize = 17.sp,
+                    fontFamily = SerifFamily,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = subtitle,
+                    // Grey is too faint over the artwork.
+                    color = if (onArtwork) RadioColors.OnArtwork else RadioColors.SecondaryText,
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            }
         }
     }
 }
 
-/** How strongly the plate behind text on bright artwork covers what is under it. */
+/** How strongly the plate behind text on the artwork covers what is under it. */
 private const val TEXT_PLATE_ALPHA = 0.6f
 
 /**
  * A translucent dark plate with rounded corners behind text that sits on the
- * brighter favorites artwork. [fraction] fades it in (1) and out (0). The plate
+ * favorites artwork in the silver theme. [fraction] fades it in (1) and out (0). The plate
  * reaches [horizontal] and [vertical] beyond the text without changing the layout.
  */
 internal fun Modifier.textPlate(fraction: Float, horizontal: Dp = 0.dp, vertical: Dp = 0.dp): Modifier =
@@ -172,7 +183,7 @@ internal fun Modifier.textPlate(fraction: Float, horizontal: Dp = 0.dp, vertical
         val dx = horizontal.toPx()
         val dy = vertical.toPx()
         drawRoundRect(
-            color = RadioColors.Background.copy(alpha = TEXT_PLATE_ALPHA * fraction),
+            color = RadioColors.ArtworkPlate.copy(alpha = TEXT_PLATE_ALPHA * fraction),
             topLeft = Offset(-dx, -dy),
             size = Size(size.width + 2 * dx, size.height + 2 * dy),
             cornerRadius = CornerRadius(12.dp.toPx()),
@@ -183,7 +194,7 @@ private val EqualizerRestingHeights = listOf(0.55f, 1f, 0.4f)
 
 /** Three small bars that bounce while the station is playing and rest otherwise. */
 @Composable
-private fun Equalizer(animate: Boolean, modifier: Modifier = Modifier, color: Color = RadioColors.Gold) {
+private fun Equalizer(animate: Boolean, modifier: Modifier = Modifier, color: Color = RadioColors.GoldText) {
     val heights = if (animate) animatedBarHeights() else EqualizerRestingHeights
 
     Row(

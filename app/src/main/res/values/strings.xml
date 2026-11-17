@@ -31,12 +31,17 @@
     <string name="background_1960s">שנות ה-60</string>
     <string name="background_1970s">שנות ה-70</string>
     <string name="background_1980s">שנות ה-80</string>
-    <!-- Switch in the picker: show the illustration under a lighter scrim. -->
-    <string name="background_brighter">רקע בהיר יותר</string>
-    <!-- Spoken names of the choices: no artwork, a decade's artwork (%1$s is its label), and the current choice. -->
+    <!-- Spoken names of the background choices: no artwork, and a decade's artwork (%1$s is its label). -->
     <string name="background_none_description">ללא רקע</string>
     <string name="background_description">רקע %1$s</string>
-    <string name="background_selected">%1$s, נבחר</string>
+    <!-- The color theme, chosen in the same picker: its heading and the two themes. -->
+    <string name="theme_setting">ערכת צבעים</string>
+    <string name="theme_dark">כהה</string>
+    <string name="theme_silver">כסף</string>
+    <!-- Spoken name of a theme choice (%1$s is its label). -->
+    <string name="theme_description">ערכת צבעים %1$s</string>
+    <!-- Spoken name of the current choice of a theme or a background (%1$s is its spoken name). -->
+    <string name="choice_selected">%1$s, נבחר</string>
     <!-- Card subtitle for the current station: category, then playback status. -->
     <string name="card_subtitle_current">%1$s • %2$s</string>
 

@@ -9,6 +9,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import io.github.evenchen1948.radioil.data.AppTheme
 import io.github.evenchen1948.radioil.data.FavoritesBackground
 import io.github.evenchen1948.radioil.data.FavoritesRepository
 import io.github.evenchen1948.radioil.data.SettingsRepository
@@ -31,8 +32,8 @@ data class PlayerUiState(
     val favoriteIds: Set<String>? = null,
     /** The artwork behind the favorites tab; null until the choice has been read from storage. */
     val favoritesBackground: FavoritesBackground? = null,
-    /** Whether the artwork is shown under the lighter scrim. */
-    val favoritesBackgroundBright: Boolean = false,
+    /** The color theme; null until the choice has been read from storage. */
+    val theme: AppTheme? = null,
 )
 
 /**
@@ -75,9 +76,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             }
         }
         viewModelScope.launch {
-            settings.favoritesBackgroundBright.collect { bright ->
-                _uiState.update { it.copy(favoritesBackgroundBright = bright) }
-            }
+            settings.theme.collect { theme -> _uiState.update { it.copy(theme = theme) } }
         }
         controllerFuture.addListener(
             {
@@ -125,8 +124,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch { settings.setFavoritesBackground(background) }
     }
 
-    fun setFavoritesBackgroundBright(bright: Boolean) {
-        viewModelScope.launch { settings.setFavoritesBackgroundBright(bright) }
+    fun setTheme(theme: AppTheme) {
+        viewModelScope.launch { settings.setTheme(theme) }
     }
 
     fun toggleFavorite(station: Station) {

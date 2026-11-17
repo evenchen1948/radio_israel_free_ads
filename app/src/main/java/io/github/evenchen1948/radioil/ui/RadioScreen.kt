@@ -50,7 +50,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -66,6 +65,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.evenchen1948.radioil.R
+import io.github.evenchen1948.radioil.data.AppTheme
 import io.github.evenchen1948.radioil.data.FavoritesBackground
 import io.github.evenchen1948.radioil.data.Station
 import io.github.evenchen1948.radioil.data.StationCategory
@@ -73,6 +73,7 @@ import io.github.evenchen1948.radioil.player.PlaybackStatus
 import io.github.evenchen1948.radioil.player.PlayerViewModel
 import io.github.evenchen1948.radioil.ui.theme.RadioColors
 import io.github.evenchen1948.radioil.ui.theme.SerifFamily
+import io.github.evenchen1948.radioil.ui.theme.SystemBarIcons
 import java.time.LocalTime
 
 private val ScreenPadding = 20.dp
@@ -86,13 +87,6 @@ private val CardSpacing = 12.dp
  * favorites tab draws its grey and gold text in off-white instead.
  */
 private const val FAVORITES_SCRIM_ALPHA = 0.60f
-
-/**
- * The scrim when the user asked for a brighter background. It is too light to
- * carry text by itself, so text on the artwork then sits on a dark plate
- * (see [textPlate]): off-white on a plate keeps about 6.7:1 even over white.
- */
-private const val FAVORITES_BRIGHT_SCRIM_ALPHA = 0.25f
 
 /** Order of the category chips and of the sections on the home screen. */
 private val CategoryOrder = listOf(
@@ -117,11 +111,11 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
     var showFavorites by rememberSaveable { mutableStateOf(false) }
     val favoriteIds = state.favoriteIds
     var showBackgroundPicker by rememberSaveable { mutableStateOf(false) }
-    // Text on the favorites tab changes colour only while there is artwork behind it.
+    // The artwork is dark in both themes, so text on it is off-white in both.
     val onArtwork = showFavorites && state.favoritesBackground?.imageRes != null
-    // Under the lighter scrim that text also gets a dark plate behind it.
+    // In the silver theme that text also gets a dark plate behind it.
     val plateFraction by animateFloatAsState(
-        targetValue = if (onArtwork && state.favoritesBackgroundBright) 1f else 0f,
+        targetValue = if (onArtwork && state.theme == AppTheme.SILVER) 1f else 0f,
         animationSpec = tween(250),
         label = "text-plates",
     )
@@ -137,6 +131,10 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
     var playerExpanded by rememberSaveable { mutableStateOf(false) }
     val showPlayer = playerExpanded && state.current != null
     BackHandler(enabled = showPlayer) { playerExpanded = false }
+
+    // Dark icons on silver, except while the favorites artwork fills the screen behind the bars.
+    val darkBarIcons = state.theme == AppTheme.SILVER && (!onArtwork || showPlayer)
+    SystemBarIcons(dark = darkBarIcons)
 
     // Previous/next step through the stations in the order the home screen lists them.
     val orderedStations = remember(state.stations) {
@@ -159,8 +157,7 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
             } else {
                 category
             },
-            // Grey is too faint over the favorites artwork.
-            subtitleColor = if (onArtwork) RadioColors.Text else RadioColors.SecondaryText,
+            onArtwork = onArtwork,
             plateFraction = plateFraction,
             isCurrent = isCurrent,
             isPlaying = isCurrent && state.status == PlaybackStatus.PLAYING,
@@ -174,11 +171,11 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(RadioColors.Background),
+            .background(RadioColors.BackgroundBrush),
     ) {
         // Only the favorites tab has artwork behind it; every other tab stays plain.
         AnimatedVisibility(visible = showFavorites, enter = fadeIn(tween(200)), exit = fadeOut(tween(200))) {
-            FavoritesBackdrop(state.favoritesBackground, bright = state.favoritesBackgroundBright)
+            FavoritesBackdrop(state.favoritesBackground)
         }
 
         LazyColumn(
@@ -214,7 +211,7 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
                     Box(Modifier.weight(1f)) {
                         Text(
                             text = stringResource(greetingRes()),
-                            color = RadioColors.Text,
+                            color = if (onArtwork) RadioColors.OnArtwork else RadioColors.Text,
                             fontSize = 32.sp,
                             fontFamily = SerifFamily,
                             fontWeight = FontWeight.Bold,
@@ -259,6 +256,7 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
                             SectionHeader(
                                 title = stringResource(R.string.tab_favorites),
                                 onShowAll = null,
+                                onArtwork = onArtwork,
                                 plateFraction = plateFraction,
                             )
                         }
@@ -296,7 +294,7 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
             item(key = "privacy") {
                 // Gold is too faint over the favorites artwork.
                 PrivacyPolicyLink(
-                    color = if (onArtwork) RadioColors.Text else RadioColors.Gold,
+                    color = if (onArtwork) RadioColors.OnArtwork else RadioColors.GoldText,
                     plateFraction = plateFraction,
                 )
             }
@@ -360,9 +358,10 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
         if (showBackgroundPicker) {
             BackgroundPickerSheet(
                 selected = state.favoritesBackground,
-                bright = state.favoritesBackgroundBright,
+                darkStatusBarIcons = darkBarIcons,
+                theme = state.theme ?: AppTheme.Default,
                 onSelect = viewModel::setFavoritesBackground,
-                onBrightChange = viewModel::setFavoritesBackgroundBright,
+                onThemeChange = viewModel::setTheme,
                 onDismiss = { showBackgroundPicker = false },
             )
         }
@@ -402,12 +401,7 @@ private fun LazyListScope.stationGrid(
  * screen, anchored to the bottom, under a dark scrim that keeps the text readable.
  */
 @Composable
-private fun FavoritesBackdrop(background: FavoritesBackground?, bright: Boolean) {
-    val scrimAlpha by animateFloatAsState(
-        targetValue = if (bright) FAVORITES_BRIGHT_SCRIM_ALPHA else FAVORITES_SCRIM_ALPHA,
-        animationSpec = tween(250),
-        label = "favorites-scrim",
-    )
+private fun FavoritesBackdrop(background: FavoritesBackground?) {
     // Null while the saved choice is still being read, and when the user chose no
     // artwork: either way the plain background shows, with no scrim to darken it.
     Crossfade(
@@ -428,8 +422,7 @@ private fun FavoritesBackdrop(background: FavoritesBackground?, bright: Boolean)
                 Box(
                     Modifier
                         .fillMaxSize()
-                        // Read while drawing, so the fade does not recompose the image.
-                        .drawBehind { drawRect(Color.Black, alpha = scrimAlpha) },
+                        .background(Color.Black.copy(alpha = FAVORITES_SCRIM_ALPHA)),
                 )
             }
         }
@@ -453,7 +446,7 @@ private fun FavoritesEmptyState(onArtwork: Boolean, plateFraction: Float) {
         ) {
             Text(
                 text = stringResource(R.string.favorites_empty_title),
-                color = RadioColors.Text,
+                color = if (onArtwork) RadioColors.OnArtwork else RadioColors.Text,
                 fontSize = 22.sp,
                 fontFamily = SerifFamily,
                 fontWeight = FontWeight.Bold,
@@ -463,7 +456,7 @@ private fun FavoritesEmptyState(onArtwork: Boolean, plateFraction: Float) {
             Text(
                 text = stringResource(R.string.favorites_empty_message),
                 // Grey is too faint over the favorites artwork.
-                color = if (onArtwork) RadioColors.Text else RadioColors.SecondaryText,
+                color = if (onArtwork) RadioColors.OnArtwork else RadioColors.SecondaryText,
                 fontSize = 15.sp,
                 lineHeight = 22.sp,
                 textAlign = TextAlign.Center,
@@ -538,7 +531,12 @@ private fun Chip(label: String, selected: Boolean, onClick: () -> Unit) {
 
 /** Section title with an optional "show all" link at the far end. */
 @Composable
-private fun SectionHeader(title: String, onShowAll: (() -> Unit)?, plateFraction: Float = 0f) {
+private fun SectionHeader(
+    title: String,
+    onShowAll: (() -> Unit)?,
+    onArtwork: Boolean = false,
+    plateFraction: Float = 0f,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -550,7 +548,7 @@ private fun SectionHeader(title: String, onShowAll: (() -> Unit)?, plateFraction
         Box(Modifier.weight(1f)) {
             Text(
                 text = title,
-                color = RadioColors.Text,
+                color = if (onArtwork) RadioColors.OnArtwork else RadioColors.Text,
                 fontSize = 20.sp,
                 fontFamily = SerifFamily,
                 fontWeight = FontWeight.Bold,
@@ -570,7 +568,7 @@ private fun SectionHeader(title: String, onShowAll: (() -> Unit)?, plateFraction
             ) {
                 Text(
                     text = stringResource(R.string.action_show_all),
-                    color = RadioColors.Gold,
+                    color = RadioColors.GoldText,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                 )

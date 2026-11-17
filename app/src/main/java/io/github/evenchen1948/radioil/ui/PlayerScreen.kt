@@ -67,6 +67,7 @@ import io.github.evenchen1948.radioil.R
 import io.github.evenchen1948.radioil.data.Station
 import io.github.evenchen1948.radioil.ui.theme.RadioColors
 import io.github.evenchen1948.radioil.ui.theme.SerifFamily
+import io.github.evenchen1948.radioil.ui.theme.surfaceShadow
 import androidx.compose.ui.res.stringResource
 import kotlin.math.roundToInt
 
@@ -95,7 +96,7 @@ fun PlayerScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(RadioColors.Background)
+            .background(RadioColors.BackgroundBrush)
             // Swallow taps so they never reach the home screen underneath.
             .pointerInput(Unit) { detectTapGestures { } }
             .windowInsetsPadding(WindowInsets.systemBars)
@@ -144,6 +145,7 @@ fun PlayerScreen(
                     .aspectRatio(1f)
                     .border(1.dp, RadioColors.Gold, CircleShape)
                     .padding(16.dp)
+                    .surfaceShadow(CircleShape)
                     .background(RadioColors.Surface, CircleShape)
                     .border(1.dp, RadioColors.Outline, CircleShape)
                     .padding(36.dp),
@@ -151,7 +153,7 @@ fun PlayerScreen(
             ) {
                 StationTileLabel(
                     station = station,
-                    mainColor = RadioColors.Gold,
+                    mainColor = RadioColors.GoldText,
                     maxMainSize = 96.sp,
                     captionSize = 15.sp,
                     captionGap = 4.dp,
@@ -208,7 +210,7 @@ fun PlayerScreen(
 private fun StatusLabel(text: String, isPlaying: Boolean, isError: Boolean) {
     val color = when {
         isError -> RadioColors.Error
-        isPlaying -> RadioColors.Gold
+        isPlaying -> RadioColors.GoldText
         else -> RadioColors.SecondaryText
     }
     Row(
