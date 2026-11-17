@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                 val viewModel: PlayerViewModel = viewModel()
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
-                // Nothing is drawn until the saved theme is known, so a silver
+                // Nothing is drawn until the saved theme is known, so a pearl
                 // launch never shows the dark theme first.
                 state.theme?.let { theme ->
                     RadioTheme(theme) {

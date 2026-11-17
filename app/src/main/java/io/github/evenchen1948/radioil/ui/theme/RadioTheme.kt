@@ -44,6 +44,8 @@ class RadioPalette(
     val text: Color,
     val secondaryText: Color,
     val error: Color,
+    /** Drawn over the favorites artwork, with its transparency, so text on it keeps its contrast. */
+    val artworkScrim: Color,
 ) {
     val backgroundBrush: Brush get() = Brush.verticalGradient(listOf(backgroundTop, backgroundBottom))
 }
@@ -61,31 +63,39 @@ private val DarkPalette = RadioPalette(
     text = Color(0xFFF2EEE6),
     secondaryText = Color(0xFF8E8E93),
     error = Color(0xFFEF8A80),
+    artworkScrim = Color(0x99000000),
 )
 
 /**
- * Brushed silver. Every text color keeps at least 4.5:1 against the darkest
- * point of the background gradient: text 12.4:1, secondary text 5.8:1, gold
- * text 4.6:1, error 5.1:1.
+ * Pearl white: a warm white canvas with pure white surfaces. Every text color
+ * keeps at least 4.5:1 against the darkest point of the background gradient
+ * (text 15.2:1, secondary text 6.2:1, gold text 5.2:1, error 6.3:1), and the
+ * marks on gold keep 8.8:1.
+ *
+ * Over the favorites artwork the 70% pearl scrim leaves the darkest parts of an
+ * illustration at about #AEADA9, where only the primary text color still passes
+ * (7.9:1; secondary 3.2:1, gold 2.7:1), so text on the artwork is drawn in the
+ * primary color.
  */
-private val SilverPalette = RadioPalette(
-    backgroundTop = Color(0xFFF1F2F4),
-    backgroundBottom = Color(0xFFD5D8DC),
-    surface = Color(0xFFF8F9FA),
-    outline = Color(0xFFB4B9BF),
+private val PearlPalette = RadioPalette(
+    backgroundTop = Color(0xFFF8F6F1),
+    backgroundBottom = Color(0xFFF1EEE7),
+    surface = Color(0xFFFFFFFF),
+    outline = Color(0xFFE4DFD4),
     gold = Color(0xFFC8A96A),
     onGold = Color(0xFF0A0A0C),
-    goldText = Color(0xFF73591F),
-    track = Color(0xFFB4B9BF),
-    text = Color(0xFF16181D),
-    secondaryText = Color(0xFF4A4F57),
+    goldText = Color(0xFF7A5F22),
+    track = Color(0xFFE4DFD4),
+    text = Color(0xFF1A1814),
+    secondaryText = Color(0xFF5C574E),
     error = Color(0xFFA8201A),
+    artworkScrim = Color(0xB3F8F6F1),
 )
 
 /** The colors of [theme], for drawing a preview of a theme that is not the active one. */
 fun paletteOf(theme: AppTheme): RadioPalette = when (theme) {
     AppTheme.DARK -> DarkPalette
-    AppTheme.SILVER -> SilverPalette
+    AppTheme.PEARL -> PearlPalette
 }
 
 /**
@@ -94,11 +104,11 @@ fun paletteOf(theme: AppTheme): RadioPalette = when (theme) {
  * the theme changes; during the change every color is a blend of the two themes.
  */
 object RadioColors {
-    /** 0 in the dark theme, 1 in the silver theme, in between while one fades into the other. */
-    private var silverFraction by mutableFloatStateOf(0f)
+    /** 0 in the dark theme, 1 in the pearl theme, in between while one fades into the other. */
+    private var pearlFraction by mutableFloatStateOf(0f)
 
     private inline fun blend(color: (RadioPalette) -> Color): Color =
-        lerp(color(DarkPalette), color(SilverPalette), silverFraction)
+        lerp(color(DarkPalette), color(PearlPalette), pearlFraction)
 
     /** The top of the background gradient; also the fill of small insets such as the bar's disc. */
     val Background: Color get() = blend { it.backgroundTop }
@@ -129,37 +139,43 @@ object RadioColors {
     val SecondaryText: Color get() = blend { it.secondaryText }
     val Error: Color get() = blend { it.error }
 
-    /** Text drawn on the favorites artwork, which is dark in both themes. */
-    val OnArtwork = Color(0xFFF2EEE6)
+    /** Hairline between rows: the primary text color at 10%. */
+    val Divider: Color get() = Text.copy(alpha = 0.10f)
 
-    /** The plate behind text on the favorites artwork, before its transparency. */
-    val ArtworkPlate = Color(0xFF0A0A0C)
+    /**
+     * Text drawn directly on the favorites artwork. Under the scrim only the
+     * primary text color keeps 4.5:1 there, so grey and gold text use it too.
+     */
+    val OnArtwork: Color get() = Text
 
-    /** Surfaces lift slightly off the silver background; on the dark one they lie flat. */
-    internal val SurfaceElevation: Dp get() = 3.dp * silverFraction
+    /** Covers the favorites artwork: black in the dark theme, pearl in the pearl theme. */
+    val ArtworkScrim: Color get() = blend { it.artworkScrim }
 
-    internal val isSilver: Boolean get() = silverFraction > 0.5f
+    /** Surfaces lift slightly off the pearl background; on the dark one they lie flat. */
+    internal val SurfaceElevation: Dp get() = 3.dp * pearlFraction
+
+    internal val isLight: Boolean get() = pearlFraction > 0.5f
 
     internal fun snapTo(theme: AppTheme) {
-        silverFraction = fractionOf(theme)
+        pearlFraction = fractionOf(theme)
     }
 
     internal suspend fun fadeTo(theme: AppTheme) {
-        animate(silverFraction, fractionOf(theme), animationSpec = tween(250)) { value, _ ->
-            silverFraction = value
+        animate(pearlFraction, fractionOf(theme), animationSpec = tween(250)) { value, _ ->
+            pearlFraction = value
         }
     }
 
-    private fun fractionOf(theme: AppTheme) = if (theme == AppTheme.SILVER) 1f else 0f
+    private fun fractionOf(theme: AppTheme) = if (theme == AppTheme.PEARL) 1f else 0f
 }
 
-/** The very soft shadow under a surface in the silver theme; nothing in the dark theme. */
+/** The very soft warm shadow under a surface in the pearl theme; nothing in the dark theme. */
 fun Modifier.surfaceShadow(shape: Shape): Modifier = shadow(
     elevation = RadioColors.SurfaceElevation,
     shape = shape,
     clip = false,
-    ambientColor = Color(0x5916181D),
-    spotColor = Color(0x5916181D),
+    ambientColor = Color(0x4D5C4B2A),
+    spotColor = Color(0x4D5C4B2A),
 )
 
 /** Frank Ruhl Libre (variable font): greeting, section titles, station names and tile labels. */
@@ -183,7 +199,7 @@ fun RadioTheme(theme: AppTheme, content: @Composable () -> Unit) {
     remember { RadioColors.snapTo(theme) }
     LaunchedEffect(theme) { RadioColors.fadeTo(theme) }
 
-    val colorScheme = if (RadioColors.isSilver) {
+    val colorScheme = if (RadioColors.isLight) {
         lightColorScheme(
             primary = RadioColors.Gold,
             onPrimary = RadioColors.OnGold,

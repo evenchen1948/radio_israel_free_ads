@@ -37,7 +37,7 @@
     <!-- The color theme, chosen in the same picker: its heading and the two themes. -->
     <string name="theme_setting">ערכת צבעים</string>
     <string name="theme_dark">כהה</string>
-    <string name="theme_silver">כסף</string>
+    <string name="theme_pearl">לבן פנינה</string>
     <!-- Spoken name of a theme choice (%1$s is its label). -->
     <string name="theme_description">ערכת צבעים %1$s</string>
     <!-- Spoken name of the current choice of a theme or a background (%1$s is its spoken name). -->

@@ -4,7 +4,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -80,14 +79,6 @@ private val ScreenPadding = 20.dp
 private val CardWidth = 150.dp
 private val CardSpacing = 12.dp
 
-/**
- * Black drawn over the favorites artwork so text on it keeps its contrast.
- * At this strength off-white text keeps 4.5:1 even over the white parts of the
- * later illustrations (about 5:1 over pure white); grey and gold do not, so the
- * favorites tab draws its grey and gold text in off-white instead.
- */
-private const val FAVORITES_SCRIM_ALPHA = 0.60f
-
 /** Order of the category chips and of the sections on the home screen. */
 private val CategoryOrder = listOf(
     StationCategory.MUSIC,
@@ -111,14 +102,9 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
     var showFavorites by rememberSaveable { mutableStateOf(false) }
     val favoriteIds = state.favoriteIds
     var showBackgroundPicker by rememberSaveable { mutableStateOf(false) }
-    // The artwork is dark in both themes, so text on it is off-white in both.
+    // Under the scrim only the primary text color keeps its contrast on the artwork,
+    // so the grey and gold text of this tab is drawn in it too.
     val onArtwork = showFavorites && state.favoritesBackground?.imageRes != null
-    // In the silver theme that text also gets a dark plate behind it.
-    val plateFraction by animateFloatAsState(
-        targetValue = if (onArtwork && state.theme == AppTheme.SILVER) 1f else 0f,
-        animationSpec = tween(250),
-        label = "text-plates",
-    )
     val haptics = LocalHapticFeedback.current
 
     // Back returns from a tab to the full list; from the full list it leaves the app.
@@ -132,8 +118,8 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
     val showPlayer = playerExpanded && state.current != null
     BackHandler(enabled = showPlayer) { playerExpanded = false }
 
-    // Dark icons on silver, except while the favorites artwork fills the screen behind the bars.
-    val darkBarIcons = state.theme == AppTheme.SILVER && (!onArtwork || showPlayer)
+    // Dark icons on pearl, on every screen: there the favorites artwork is under a pearl scrim.
+    val darkBarIcons = state.theme == AppTheme.PEARL
     SystemBarIcons(dark = darkBarIcons)
 
     // Previous/next step through the stations in the order the home screen lists them.
@@ -158,7 +144,6 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
                 category
             },
             onArtwork = onArtwork,
-            plateFraction = plateFraction,
             isCurrent = isCurrent,
             isPlaying = isCurrent && state.status == PlaybackStatus.PLAYING,
             isFavorite = favoriteIds?.contains(station.id) == true,
@@ -207,19 +192,16 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
                         .heightIn(min = 48.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // The box takes the free width so the plate can hug the text.
-                    Box(Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(greetingRes()),
-                            color = if (onArtwork) RadioColors.OnArtwork else RadioColors.Text,
-                            fontSize = 32.sp,
-                            fontFamily = SerifFamily,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .textPlate(plateFraction, horizontal = 10.dp, vertical = 2.dp)
-                                .semantics { heading() },
-                        )
-                    }
+                    Text(
+                        text = stringResource(greetingRes()),
+                        color = RadioColors.Text,
+                        fontSize = 32.sp,
+                        fontFamily = SerifFamily,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .weight(1f)
+                            .semantics { heading() },
+                    )
                     if (showFavorites) {
                         ChangeBackgroundButton(onClick = { showBackgroundPicker = true })
                     }
@@ -249,15 +231,13 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
                     // Still reading the saved favorites: show nothing rather than a false "empty".
                     favoriteIds == null -> Unit
                     starred.isEmpty() -> item(key = "favorites-empty") {
-                        FavoritesEmptyState(onArtwork, plateFraction)
+                        FavoritesEmptyState(onArtwork)
                     }
                     else -> {
                         item(key = "section-favorites") {
                             SectionHeader(
                                 title = stringResource(R.string.tab_favorites),
                                 onShowAll = null,
-                                onArtwork = onArtwork,
-                                plateFraction = plateFraction,
                             )
                         }
                         stationGrid(starred) { station, modifier -> Card(station, modifier) }
@@ -293,10 +273,7 @@ fun RadioScreen(viewModel: PlayerViewModel = viewModel()) {
 
             item(key = "privacy") {
                 // Gold is too faint over the favorites artwork.
-                PrivacyPolicyLink(
-                    color = if (onArtwork) RadioColors.OnArtwork else RadioColors.GoldText,
-                    plateFraction = plateFraction,
-                )
+                PrivacyPolicyLink(color = if (onArtwork) RadioColors.OnArtwork else RadioColors.GoldText)
             }
         }
 
@@ -398,12 +375,12 @@ private fun LazyListScope.stationGrid(
 
 /**
  * The radio illustration the user chose for the favorites tab, if any: it fills the
- * screen, anchored to the bottom, under a dark scrim that keeps the text readable.
+ * screen, anchored to the bottom, under the theme's scrim that keeps the text readable.
  */
 @Composable
 private fun FavoritesBackdrop(background: FavoritesBackground?) {
     // Null while the saved choice is still being read, and when the user chose no
-    // artwork: either way the plain background shows, with no scrim to darken it.
+    // artwork: either way the plain background shows, with no scrim over it.
     Crossfade(
         targetState = background?.imageRes,
         animationSpec = tween(250),
@@ -422,7 +399,7 @@ private fun FavoritesBackdrop(background: FavoritesBackground?) {
                 Box(
                     Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = FAVORITES_SCRIM_ALPHA)),
+                        .background(RadioColors.ArtworkScrim),
                 )
             }
         }
@@ -431,7 +408,7 @@ private fun FavoritesBackdrop(background: FavoritesBackground?) {
 
 /** Shown in the favorites tab before any station is starred: how to add a favorite. */
 @Composable
-private fun FavoritesEmptyState(onArtwork: Boolean, plateFraction: Float) {
+private fun FavoritesEmptyState(onArtwork: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -439,14 +416,10 @@ private fun FavoritesEmptyState(onArtwork: Boolean, plateFraction: Float) {
             .padding(top = 32.dp),
         contentAlignment = Alignment.TopCenter,
     ) {
-        Column(
-            // Only as wide as its text, so the plate hugs both lines.
-            modifier = Modifier.textPlate(plateFraction, horizontal = 12.dp, vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = stringResource(R.string.favorites_empty_title),
-                color = if (onArtwork) RadioColors.OnArtwork else RadioColors.Text,
+                color = RadioColors.Text,
                 fontSize = 22.sp,
                 fontFamily = SerifFamily,
                 fontWeight = FontWeight.Bold,
@@ -531,12 +504,7 @@ private fun Chip(label: String, selected: Boolean, onClick: () -> Unit) {
 
 /** Section title with an optional "show all" link at the far end. */
 @Composable
-private fun SectionHeader(
-    title: String,
-    onShowAll: (() -> Unit)?,
-    onArtwork: Boolean = false,
-    plateFraction: Float = 0f,
-) {
+private fun SectionHeader(title: String, onShowAll: (() -> Unit)?) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -544,19 +512,16 @@ private fun SectionHeader(
             .heightIn(min = 48.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // The box takes the free width so the plate can hug the text.
-        Box(Modifier.weight(1f)) {
-            Text(
-                text = title,
-                color = if (onArtwork) RadioColors.OnArtwork else RadioColors.Text,
-                fontSize = 20.sp,
-                fontFamily = SerifFamily,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .textPlate(plateFraction, horizontal = 10.dp, vertical = 4.dp)
-                    .semantics { heading() },
-            )
-        }
+        Text(
+            text = title,
+            color = RadioColors.Text,
+            fontSize = 20.sp,
+            fontFamily = SerifFamily,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .weight(1f)
+                .semantics { heading() },
+        )
         if (onShowAll != null) {
             Box(
                 modifier = Modifier
@@ -579,7 +544,7 @@ private fun SectionHeader(
 
 /** Footer link that opens the privacy policy in the browser, as Google Play requires. */
 @Composable
-private fun PrivacyPolicyLink(color: Color, plateFraction: Float) {
+private fun PrivacyPolicyLink(color: Color) {
     val uriHandler = LocalUriHandler.current
     val url = stringResource(R.string.privacy_policy_url)
     Box(
@@ -591,7 +556,6 @@ private fun PrivacyPolicyLink(color: Color, plateFraction: Float) {
         Box(
             modifier = Modifier
                 .heightIn(min = 48.dp)
-                .textPlate(plateFraction)
                 .clip(CircleShape)
                 .clickable(role = Role.Button) {
                     // No browser installed: nothing to open, and nothing worth crashing over.

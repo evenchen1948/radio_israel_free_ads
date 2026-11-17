@@ -156,7 +156,7 @@ fun BackgroundPickerSheet(
         // status bar and the sheet's own surface behind the navigation bar.
         properties = ModalBottomSheetProperties(
             isAppearanceLightStatusBars = darkStatusBarIcons,
-            isAppearanceLightNavigationBars = theme == AppTheme.SILVER,
+            isAppearanceLightNavigationBars = theme == AppTheme.PEARL,
         ),
     ) {
         SheetHeading(stringResource(R.string.theme_setting))
