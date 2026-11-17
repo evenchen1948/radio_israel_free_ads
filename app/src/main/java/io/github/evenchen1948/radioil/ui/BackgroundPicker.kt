@@ -41,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -75,8 +76,14 @@ import kotlinx.coroutines.withContext
 
 private val CardWidth = 120.dp
 
-/** Width over height of the illustrations, so a card shows what the tab will show. */
-private const val CARD_ASPECT_RATIO = 9f / 20f
+/**
+ * Width over height of a card. Much shorter than the illustrations, so the
+ * sheet leaves the upper half of the tab, and the change behind it, in view.
+ */
+private const val CARD_ASPECT_RATIO = 3f / 4f
+
+/** Crops to the lower part of an illustration, where the radio stands, with a little floor under it. */
+private val CardImageAlignment = BiasAlignment(horizontalBias = 0f, verticalBias = 0.6f)
 private val CardShape = RoundedCornerShape(14.dp)
 
 /** The round button on the favorites tab that opens the background picker. */
@@ -244,7 +251,7 @@ private fun BackgroundCard(background: FavoritesBackground, selected: Boolean, o
                         // The card's own description already names it.
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
-                        alignment = Alignment.BottomCenter,
+                        alignment = CardImageAlignment,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }

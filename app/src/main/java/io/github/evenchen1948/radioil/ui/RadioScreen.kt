@@ -81,10 +81,11 @@ private val CardSpacing = 12.dp
 
 /**
  * Black drawn over the favorites artwork so text on it keeps its contrast.
- * At this strength only off-white text reaches 4.5:1 on the brass horn, so
- * the favorites tab draws its grey and gold text in off-white instead.
+ * At this strength off-white text keeps 4.5:1 even over the white parts of the
+ * later illustrations (about 5:1 over pure white); grey and gold do not, so the
+ * favorites tab draws its grey and gold text in off-white instead.
  */
-private const val FAVORITES_SCRIM_ALPHA = 0.55f
+private const val FAVORITES_SCRIM_ALPHA = 0.60f
 
 /**
  * The scrim when the user asked for a brighter background. It is too light to
