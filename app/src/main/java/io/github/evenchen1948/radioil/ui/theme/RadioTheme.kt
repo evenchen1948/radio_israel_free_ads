@@ -72,9 +72,9 @@ private val DarkPalette = RadioPalette(
  * (text 15.2:1, secondary text 6.2:1, gold text 5.2:1, error 6.3:1), and the
  * marks on gold keep 8.8:1.
  *
- * Over the favorites artwork the 70% pearl scrim leaves the darkest parts of an
- * illustration at about #AEADA9, where only the primary text color still passes
- * (7.9:1; secondary 3.2:1, gold 2.7:1), so text on the artwork is drawn in the
+ * Over the favorites artwork the 88% pearl scrim leaves the darkest parts of an
+ * illustration at about #DAD9D4, where gold text no longer passes (primary
+ * 12.4:1, secondary 5.0:1, gold 4.2:1), so text on the artwork is drawn in the
  * primary color.
  */
 private val PearlPalette = RadioPalette(
@@ -89,7 +89,7 @@ private val PearlPalette = RadioPalette(
     text = Color(0xFF1A1814),
     secondaryText = Color(0xFF5C574E),
     error = Color(0xFFA8201A),
-    artworkScrim = Color(0xB3F8F6F1),
+    artworkScrim = Color(0xE0F8F6F1),
 )
 
 /** The colors of [theme], for drawing a preview of a theme that is not the active one. */
@@ -143,8 +143,8 @@ object RadioColors {
     val Divider: Color get() = Text.copy(alpha = 0.10f)
 
     /**
-     * Text drawn directly on the favorites artwork. Under the scrim only the
-     * primary text color keeps 4.5:1 there, so grey and gold text use it too.
+     * Text drawn directly on the favorites artwork. Under the scrim the primary
+     * text color keeps 4.5:1 there in both themes, so grey and gold text use it too.
      */
     val OnArtwork: Color get() = Text
 
