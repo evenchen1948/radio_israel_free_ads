@@ -35,6 +35,7 @@ import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
@@ -55,6 +56,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -64,6 +66,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.view.WindowCompat
 import io.github.evenchen1948.radioil.R
 import io.github.evenchen1948.radioil.data.AppTheme
 import io.github.evenchen1948.radioil.data.FavoritesBackground
@@ -159,6 +163,7 @@ fun BackgroundPickerSheet(
             isAppearanceLightNavigationBars = theme == AppTheme.PEARL,
         ),
     ) {
+        SheetBarIcons(darkStatusBar = darkStatusBarIcons, darkNavigationBar = theme == AppTheme.PEARL)
         SheetHeading(stringResource(R.string.theme_setting))
         Row(
             modifier = Modifier
@@ -195,6 +200,26 @@ fun BackgroundPickerSheet(
             }
         }
         Spacer(Modifier.height(8.dp))
+    }
+}
+
+/**
+ * Keeps the bar icons of the sheet's own window right while it is open. The
+ * sheet's properties only set them when it opens, so without this a theme
+ * chosen in the sheet would leave the old icons until it is reopened.
+ */
+@Composable
+private fun SheetBarIcons(darkStatusBar: Boolean, darkNavigationBar: Boolean) {
+    val view = LocalView.current
+    SideEffect {
+        val window = generateSequence(view.parent) { it.parent }
+            .filterIsInstance<DialogWindowProvider>()
+            .firstOrNull()
+            ?.window ?: return@SideEffect
+        WindowCompat.getInsetsController(window, view).apply {
+            isAppearanceLightStatusBars = darkStatusBar
+            isAppearanceLightNavigationBars = darkNavigationBar
+        }
     }
 }
 
