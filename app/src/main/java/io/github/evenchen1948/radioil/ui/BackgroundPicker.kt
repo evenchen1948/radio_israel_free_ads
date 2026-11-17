@@ -80,12 +80,12 @@ private val CardWidth = 120.dp
  * Width over height of a card. Much shorter than the illustrations, so the
  * sheet leaves the upper part of the tab, and the change behind it, in view.
  */
-private const val CARD_ASPECT_RATIO = 3f / 4f
+private const val CARD_ASPECT_RATIO = 10f / 11f
 
-/** Crops to the lower part of an illustration, where the radio stands, with a little floor under it. */
-private val CardImageAlignment = BiasAlignment(horizontalBias = 0f, verticalBias = 0.6f)
+/** Crops to the band of an illustration where the radio stands, from its antenna to a little floor under it. */
+private val CardImageAlignment = BiasAlignment(horizontalBias = 0f, verticalBias = 0.45f)
 private val CardShape = RoundedCornerShape(14.dp)
-private val ThemeTileHeight = 76.dp
+private val ThemeTileHeight = 52.dp
 
 /** The round button on the favorites tab that opens the picker. */
 @Composable
@@ -163,7 +163,7 @@ fun BackgroundPickerSheet(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 8.dp),
+                .padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             AppTheme.entries.forEach { option ->
@@ -181,7 +181,7 @@ fun BackgroundPickerSheet(
             state = listState,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 12.dp, bottom = 8.dp),
+                .padding(top = 8.dp),
             contentPadding = PaddingValues(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             flingBehavior = rememberSnapFlingBehavior(listState, SnapPosition.Start),
@@ -203,7 +203,7 @@ private fun SheetHeading(text: String) {
     Text(
         text = text,
         color = RadioColors.Text,
-        fontSize = 20.sp,
+        fontSize = 18.sp,
         fontFamily = SerifFamily,
         fontWeight = FontWeight.Bold,
         modifier = Modifier
@@ -233,7 +233,7 @@ private fun ThemeTile(theme: AppTheme, selected: Boolean, onClick: () -> Unit, m
                 .background(palette.backgroundBrush),
             contentAlignment = Alignment.Center,
         ) {
-            Canvas(Modifier.size(width = 96.dp, height = 44.dp)) { drawThemeSample(palette) }
+            Canvas(Modifier.size(width = 80.dp, height = 32.dp)) { drawThemeSample(palette) }
             ChoiceFrame(selected)
         }
     }
@@ -331,7 +331,7 @@ private fun ChoiceColumn(
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
             maxLines = 1,
             modifier = Modifier
-                .padding(vertical = 10.dp)
+                .padding(vertical = 6.dp)
                 // Already part of the description.
                 .clearAndSetSemantics {},
         )
