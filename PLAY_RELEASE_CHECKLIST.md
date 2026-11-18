@@ -106,7 +106,7 @@ Tested with the R8 release build on an Android 15 emulator. No crashes, no ANRs,
 
 ### Version, application ID and icon
 
-- `versionCode` is 5 and `versionName` is `1.1.3`. Version codes 1 (`1.0.0`), 2 (`1.1.0`), 3 (`1.1.1`) and 4 (`1.1.2`) are already used on Google Play.
+- `versionCode` is 6 and `versionName` is `1.1.4`. Version codes 1 (`1.0.0`), 2 (`1.1.0`), 3 (`1.1.1`), 4 (`1.1.2`) and 5 (`1.1.3`) are already used on Google Play.
 - **Adaptive icon:** a rabbit wearing headphones on near black (`#0A0A0C`), with a monochrome layer
   for themed icons and legacy mipmaps. The layers are bitmaps generated from `design/img.png`, which
   is also the 512x512 icon to upload to the Play Console listing.
